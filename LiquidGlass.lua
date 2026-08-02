@@ -144,7 +144,7 @@ function LiquidGlass:CreateWindow(config)
     self.Executor = GetExecutorName()
 
     local gui = Instance.new("ScreenGui")
-    gui.Name = "LiquidGlassV7_8"
+    gui.Name = "LiquidGlassV7_9"
     gui.ResetOnSpawn = false
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     gui.IgnoreGuiInset = true
@@ -725,7 +725,7 @@ function Window:AddTab(name, iconId)
 
     local leftColLayout = Instance.new("UIListLayout")
     leftColLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    leftColLayout.Padding = UDim.new(0, 10) -- Premium Increased Spacing
+    leftColLayout.Padding = UDim.new(0, 10)
     leftColLayout.Parent = leftCol
 
     local rightCol = Instance.new("Frame")
@@ -734,11 +734,11 @@ function Window:AddTab(name, iconId)
     rightCol.Size = UDim2.new(0.5, -4, 0, 0)
     rightCol.AutomaticSize = Enum.AutomaticSize.Y
     rightCol.ZIndex = 6
-    rightCol.Parent = page -- FIXED parenting reference error resolved!
+    rightCol.Parent = page -- FIXED parenting references to prevent Cyclic Reference error
 
     local rightColLayout = Instance.new("UIListLayout")
     rightColLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    rightColLayout.Padding = UDim.new(0, 10) -- Premium Increased Spacing
+    rightColLayout.Padding = UDim.new(0, 10)
     rightColLayout.Parent = rightCol
 
     local pageLayout = Instance.new("UIListLayout")
@@ -864,7 +864,7 @@ function Window:AddTab(name, iconId)
         colBtn.Parent = gHeader
 
         -- Restructured Body Container with corrected spacing
-        local gBody = Instance.new("CanvasGroup") -- Converted to CanvasGroup for ultra smooth grouping fades
+        local gBody = Instance.new("CanvasGroup")
         gBody.BackgroundTransparency = 1
         gBody.Position = UDim2.new(0, 0, 0, 32)
         gBody.Size = UDim2.new(1, 0, 1, -32)
@@ -874,7 +874,7 @@ function Window:AddTab(name, iconId)
 
         local gBodyLayout = Instance.new("UIListLayout")
         gBodyLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        gBodyLayout.Padding = UDim.new(0, 10) -- Premium Spacing Multiplier applied
+        gBodyLayout.Padding = UDim.new(0, 10)
         gBodyLayout.Parent = gBody
 
         local gBodyPad = Instance.new("UIPadding")
@@ -891,10 +891,9 @@ function Window:AddTab(name, iconId)
                 SmoothTween(colBtn, { Rotation = 180 }, 0.22, Theme.TweenStyle)
                 SmoothTween(gBody, { GroupTransparency = 1 }, 0.15, Enum.EasingStyle.Quad)
                 
-                -- Elastic minimize animation
                 groupFrame.AutomaticSize = Enum.AutomaticSize.None
                 SmoothTween(groupFrame, { Size = UDim2.new(1, 0, 0, 32) }, 0.22, Theme.TweenStyle):Completed:Connect(function()
-                    gBody.Visible = false
+                    if isCollapsed then gBody.Visible = false end
                 end)
             else
                 colBtn.Rotation = 180
@@ -952,7 +951,6 @@ function Window:AddTab(name, iconId)
             click.MouseEnter:Connect(function() SmoothTween(btn, { BackgroundTransparency = 0.8 }, 0.1, Enum.EasingStyle.Quad) end)
             click.MouseLeave:Connect(function() SmoothTween(btn, { BackgroundTransparency = 1 - Theme.GlassOpacity }, 0.1, Enum.EasingStyle.Quad) end)
             
-            -- Elastic Click Squash (0.97 Scale)
             click.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     SmoothTween(uiScale_btn, { Scale = 0.96 }, 0.08, Enum.EasingStyle.Quad)
@@ -1026,8 +1024,7 @@ function Window:AddTab(name, iconId)
             click.Parent = row
 
             local function updateToggle()
-                -- Elastic stretch on active transition state
-                SmoothTween(track, { BackgroundColor3 = state and Theme.Accent or Color3.fromRGB(55, 60, 75) }, 0.12, Enum.EasingStyle.Quad)
+                SmoothTween(track, { BackgroundColor3 = state and Theme.Accent or Color3.fromRGB(55, 60, 75) }, 0.15, Theme.TweenStyle)
                 local targetPos = state and UDim2.new(1, -12, 0.5, -5) or UDim2.new(0, 2, 0.5, -5)
                 
                 SmoothTween(thumb, { Position = targetPos, Size = UDim2.new(0, 13, 0, 9) }, 0.1, Enum.EasingStyle.Quad):Completed:Connect(function()
@@ -1125,14 +1122,13 @@ function Window:AddTab(name, iconId)
             thumbCorner.CornerRadius = UDim.new(0, 3)
             thumbCorner.Parent = thumb
 
-            -- Floating specularity tooltip balloon (Fades in/out elegantly)
             local tooltip, _, tooltipCorner = BuildGlassFrame({
                 Size = UDim2.new(0, 32, 0, 18),
                 Radius = UDim.new(0, 4),
                 ZIndex = 15
             })
             tooltip.BackgroundTransparency = 1
-            tooltip.Size = UDim2.new(0, 0, 0, 0) -- Scaled down initially
+            tooltip.Size = UDim2.new(0, 0, 0, 0)
             tooltip.Position = UDim2.new(0.5, 0, 0, -14)
             tooltip.ClipsDescendants = true
             tooltip.ZIndex = 15
@@ -1162,7 +1158,6 @@ function Window:AddTab(name, iconId)
                 if slidConfig.Callback then pcall(slidConfig.Callback, value) end
             end
 
-            -- Display Tooltip balloon on start dragging
             local function showTooltip()
                 if tooltipStroke then tooltipStroke.Enabled = true end
                 SmoothTween(tooltip, { Size = UDim2.new(0, 32, 0, 18), Position = UDim2.new(0.5, -16, 0, -22), BackgroundTransparency = 0.1 }, 0.16, Enum.EasingStyle.Quad)
@@ -1264,7 +1259,6 @@ function Window:AddTab(name, iconId)
             holderLayout.SortOrder = Enum.SortOrder.LayoutOrder
             holderLayout.Parent = listHolder
 
-            -- Real-time Search Box Filter Container
             local searchBoxFrame = Instance.new("Frame")
             searchBoxFrame.BackgroundColor3 = Color3.fromRGB(24, 26, 42)
             searchBoxFrame.Size = UDim2.new(1, -12, 0, 24)
@@ -1303,7 +1297,6 @@ function Window:AddTab(name, iconId)
 
                 local activeList = {}
                 for index, value in ipairs(options) do
-                    -- Filter options dynamically matching search text
                     if dropdownSearch.Text == "" or string.find(string.lower(value), string.lower(dropdownSearch.Text)) then
                         table.insert(activeList, value)
                     end
@@ -1323,7 +1316,6 @@ function Window:AddTab(name, iconId)
                     optBtn.ZIndex = 9
                     optBtn.Parent = listHolder
 
-                    -- Micro sliding left highlighting trail on enter
                     local hoverIndicator = Instance.new("Frame")
                     hoverIndicator.BackgroundColor3 = Theme.Accent
                     hoverIndicator.Size = UDim2.new(0, 0, 0, 16)
@@ -1353,7 +1345,6 @@ function Window:AddTab(name, iconId)
                     end)
                 end
 
-                -- Recalculate heights including the Search Box frame
                 local heightOfEntries = #activeList * 26
                 local targetHeight = 34 + 32 + heightOfEntries
                 SmoothTween(container, { Size = UDim2.new(1, 0, 0, targetHeight) }, 0.2, Enum.EasingStyle.Quint)
@@ -1396,7 +1387,7 @@ function Window:AddTab(name, iconId)
                 Radius = UDim.new(0, 6),
                 ZIndex = 7
             })
-            container.LayoutOrder = Group._order
+            container.LayoutOrder = Tab._order
             Group._order = Group._order + 1
 
             local label = Instance.new("TextLabel")
