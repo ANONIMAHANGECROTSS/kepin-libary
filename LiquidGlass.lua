@@ -47,21 +47,6 @@ local function GetExecutorName()
         local success, name = pcall(identifyexecutor)
         if success and name then return name end
     end
-    if getexecutorname then
-        local success, name = pcall(getexecutorname)
-        if success and name then return name end
-    end
-    if syn then return "Synapse X" end
-    if sethackflag then return "Sentinel" end
-    if pebc_execute then return "ProtoSmasher" end
-    if secure_call then return "KRNL" end
-    if FLUXUS_LOADED then return "Fluxus" end
-    if is_sirhurt_out_of_date then return "SirHurt" end
-    if checkclosure then return "Sentinel" end
-    if ARCEUS_LOADED then return "Arceus X" end
-    if CODEX_LOADED then return "Codex" end
-    if DELTA_LOADED then return "Delta" end
-    if SOLARA_LOADED then return "Solara" end
     return "Roblox Client"
 end
 
@@ -144,7 +129,7 @@ function LiquidGlass:CreateWindow(config)
     self.Executor = GetExecutorName()
 
     local gui = Instance.new("ScreenGui")
-    gui.Name = "LiquidGlassV7_9"
+    gui.Name = "LiquidGlassV7_8"
     gui.ResetOnSpawn = false
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     gui.IgnoreGuiInset = true
@@ -271,7 +256,7 @@ function LiquidGlass:CreateWindow(config)
     header.BackgroundTransparency = 0.98
     header.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     header.BorderSizePixel = 0
-    header.Size = UDim2.new(1, 0, 0, 40)
+    header.Size = UDim2.new(1, 0, 0, 44) -- Slightly taller header
     header.ZIndex = 4
     header.Parent = canvas
 
@@ -286,7 +271,7 @@ function LiquidGlass:CreateWindow(config)
 
     local titleGroup = Instance.new("Frame")
     titleGroup.BackgroundTransparency = 1
-    titleGroup.Size = UDim2.new(0, 140, 1, 0)
+    titleGroup.Size = UDim2.new(0, 160, 1, 0)
     titleGroup.Position = UDim2.new(0, 16, 0, 0)
     titleGroup.ZIndex = 5
     titleGroup.Parent = header
@@ -297,15 +282,15 @@ function LiquidGlass:CreateWindow(config)
     mainTitle.Font = Enum.Font.GothamBold
     mainTitle.Text = self.Title
     mainTitle.TextColor3 = Theme.TextPrimary
-    mainTitle.TextSize = 13
+    mainTitle.TextSize = 14
     mainTitle.TextXAlignment = Enum.TextXAlignment.Left
     mainTitle.ZIndex = 5
     mainTitle.Parent = titleGroup
 
     local versionTag = Instance.new("TextLabel")
     versionTag.BackgroundColor3 = Theme.Accent
-    versionTag.Size = UDim2.new(0, 30, 0, 14)
-    versionTag.Position = UDim2.new(0, 84, 0.5, -7)
+    versionTag.Size = UDim2.new(0, 34, 0, 16)
+    versionTag.Position = UDim2.new(0, 96, 0.5, -8)
     versionTag.Font = Enum.Font.GothamBold
     versionTag.Text = self.Subtitle
     versionTag.TextColor3 = Theme.TextPrimary
@@ -390,8 +375,8 @@ function LiquidGlass:CreateWindow(config)
 
     local workspaceFrame = Instance.new("Frame")
     workspaceFrame.BackgroundTransparency = 1
-    workspaceFrame.Size = UDim2.new(1, 0, 1, -68)
-    workspaceFrame.Position = UDim2.new(0, 0, 0, 40)
+    workspaceFrame.Size = UDim2.new(1, 0, 1, -72)
+    workspaceFrame.Position = UDim2.new(0, 0, 0, 44)
     workspaceFrame.ZIndex = 4
     workspaceFrame.Parent = canvas
 
@@ -422,13 +407,13 @@ function LiquidGlass:CreateWindow(config)
 
     local tabListLayout = Instance.new("UIListLayout")
     tabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    tabListLayout.Padding = UDim.new(0, 4)
+    tabListLayout.Padding = UDim.new(0, 6)
     tabListLayout.Parent = tabScroller
 
     local tabPad = Instance.new("UIPadding")
     tabPad.PaddingLeft = UDim.new(0, 8)
     tabPad.PaddingRight = UDim.new(0, 8)
-    tabPad.PaddingTop = UDim.new(0, 26)
+    tabPad.PaddingTop = UDim.new(0, 30)
     tabPad.Parent = tabScroller
 
     local catTitle = Instance.new("TextLabel")
@@ -527,7 +512,7 @@ function LiquidGlass:CreateWindow(config)
         local nWidth = math.clamp(rStartWinSize.X.Offset + delta.X, 480, 900)
         local nHeight = math.clamp(rStartWinSize.Y.Offset + delta.Y, 300, 650)
         
-        winFrame.Size = UDim2.new(0, nWidth, 0, nHeight)
+        SmoothTween(winFrame, {Size = UDim2.new(0, nWidth, 0, nHeight)}, 0.1, Enum.EasingStyle.Quad)
         contentArea.Size = UDim2.new(1, -self.SidebarWidth, 1, 0)
     end)
 
@@ -553,23 +538,22 @@ function LiquidGlass:CreateWindow(config)
             originalSize = winFrame.Size
             originalPos = winFrame.Position
 
+            SmoothTween(uiScale, { Scale = 0.9 }, 0.12, Enum.EasingStyle.Quad)
             SmoothTween(canvas, { GroupTransparency = 1 }, 0.12, Enum.EasingStyle.Quad)
             SmoothTween(shadow, { ImageTransparency = 1 }, 0.12, Enum.EasingStyle.Quad)
             SmoothTween(lightingBlur, { Size = 0 }, 0.15, Enum.EasingStyle.Quad)
-            task.delay(0.12, function()
+            
+            task.delay(0.1, function()
                 canvas.Visible = false
+                SmoothTween(winFrame, {
+                    Size = UDim2.new(0, 210, 0, 36),
+                    Position = UDim2.new(0.5, -105, 0, 15),
+                    BackgroundTransparency = 0.08
+                }, 0.2, Theme.TweenStyle, Theme.TweenDirection)
+                SmoothTween(uiScale, { Scale = 1.0 }, 0.2, Theme.TweenStyle, Theme.TweenDirection)
             end)
 
-            SmoothTween(winFrame, {
-                Size = UDim2.new(0, 210, 0, 36),
-                Position = UDim2.new(0.5, -105, 0, 15),
-                BackgroundTransparency = 0.08
-            }, 0.22, Theme.TweenStyle, Theme.TweenDirection)
-            SmoothTween(winCorner, { CornerRadius = UDim.new(0, 8) }, 0.22, Theme.TweenStyle, Theme.TweenDirection)
-            SmoothTween(sheenCorner, { CornerRadius = UDim.new(0, 8) }, 0.22, Theme.TweenStyle, Theme.TweenDirection)
-            SmoothTween(uiScale, { Scale = 0.96 }, 0.15, Enum.EasingStyle.Quad)
-
-            task.delay(0.15, function()
+            task.delay(0.2, function()
                 islandFrame.Size = UDim2.new(0, 210, 0, 36)
                 islandFrame.Position = UDim2.new(0.5, -105, 0, 15)
                 islandFrame.Visible = true
@@ -583,9 +567,7 @@ function LiquidGlass:CreateWindow(config)
                 Position = originalPos,
                 BackgroundTransparency = 1 - Theme.GlassOpacity
             }, 0.25, Theme.TweenStyle, Theme.TweenDirection)
-            SmoothTween(winCorner, { CornerRadius = UDim.new(0, 10) }, 0.25, Theme.TweenStyle, Theme.TweenDirection)
-            SmoothTween(sheenCorner, { CornerRadius = UDim.new(0, 10) }, 0.25, Theme.TweenStyle, Theme.TweenDirection)
-            SmoothTween(uiScale, { Scale = 1.0 }, 0.15, Enum.EasingStyle.Quad)
+            SmoothTween(uiScale, { Scale = 1.0 }, 0.25, Theme.TweenStyle, Theme.TweenDirection)
 
             SmoothTween(canvas, { GroupTransparency = 0 }, 0.15, Enum.EasingStyle.Quad)
             SmoothTween(shadow, { ImageTransparency = 1 - Theme.ShadowOpacity }, 0.15, Enum.EasingStyle.Quad)
@@ -597,12 +579,12 @@ function LiquidGlass:CreateWindow(config)
     islandFrame.MouseButton1Click:Connect(ToggleMinimize)
 
     closeBtn.MouseButton1Click:Connect(function()
+        SmoothTween(uiScale, { Scale = 0.9 }, 0.12, Enum.EasingStyle.Quad)
         SmoothTween(winFrame, { 
             Size = UDim2.new(0, self.Width, 0, 0), 
             Position = UDim2.new(0.5, -self.Width/2, 0.5, 0),
             BackgroundTransparency = 1 
-        }, 0.22, Theme.TweenStyle, Theme.TweenDirection)
-        SmoothTween(uiScale, { Scale = 0.95 }, 0.18, Enum.EasingStyle.Quad)
+        }, 0.2, Theme.TweenStyle, Theme.TweenDirection)
         SmoothTween(canvas, { GroupTransparency = 1 }, 0.12, Enum.EasingStyle.Quad)
         SmoothTween(shadow, { ImageTransparency = 1 }, 0.12, Enum.EasingStyle.Quad)
         SmoothTween(lightingBlur, { Size = 0 }, 0.2, Enum.EasingStyle.Quad)
@@ -617,7 +599,7 @@ function LiquidGlass:CreateWindow(config)
     shadow.ImageTransparency = 1
 
     SmoothTween(winFrame, { BackgroundTransparency = 1 - Theme.GlassOpacity }, 0.15, Enum.EasingStyle.Quad)
-    SmoothTween(uiScale, { Scale = 1.0 }, 0.15, Enum.EasingStyle.Quad)
+    SmoothTween(uiScale, { Scale = 1.0 }, 0.15, Theme.TweenStyle, Theme.TweenDirection)
     SmoothTween(canvas, { GroupTransparency = 0 }, 0.12, Enum.EasingStyle.Quad)
     SmoothTween(shadow, { ImageTransparency = 1 - Theme.ShadowOpacity }, 0.12, Enum.EasingStyle.Quad)
 
@@ -632,7 +614,7 @@ function Window:AddTab(name, iconId)
     tabBtn.BackgroundColor3 = Theme.Accent
     tabBtn.BackgroundTransparency = 1
     tabBtn.BorderSizePixel = 0
-    tabBtn.Size = UDim2.new(1, 0, 0, 32)
+    tabBtn.Size = UDim2.new(1, 0, 0, 36)
     tabBtn.Font = Enum.Font.GothamSemibold
     tabBtn.Text = ""
     tabBtn.ZIndex = 6
@@ -646,14 +628,14 @@ function Window:AddTab(name, iconId)
     if iconId then
         local icon = Instance.new("ImageLabel")
         icon.BackgroundTransparency = 1
-        icon.Size = UDim2.new(0, 14, 0, 14)
-        icon.Position = UDim2.new(0, 10, 0.5, -7)
+        icon.Size = UDim2.new(0, 16, 0, 16)
+        icon.Position = UDim2.new(0, 10, 0.5, -8)
         icon.Image = iconId
         icon.ImageColor3 = Theme.TextMuted
         icon.ZIndex = 7
         icon.Parent = tabBtn
         tabData._icon = icon
-        offset = 30
+        offset = 32
     end
 
     local tabLabel = Instance.new("TextLabel")
@@ -714,11 +696,10 @@ function Window:AddTab(name, iconId)
     page.ZIndex = 6
     page.Parent = pageGlass
 
-    -- Dynamic Dual-Column responsive structure
     local leftCol = Instance.new("Frame")
     leftCol.Name = "LeftColumn"
     leftCol.BackgroundTransparency = 1
-    leftCol.Size = UDim2.new(0.5, -4, 0, 0)
+    leftCol.Size = UDim2.new(0.5, -6, 0, 0)
     leftCol.AutomaticSize = Enum.AutomaticSize.Y
     leftCol.ZIndex = 6
     leftCol.Parent = page
@@ -731,10 +712,10 @@ function Window:AddTab(name, iconId)
     local rightCol = Instance.new("Frame")
     rightCol.Name = "RightColumn"
     rightCol.BackgroundTransparency = 1
-    rightCol.Size = UDim2.new(0.5, -4, 0, 0)
+    rightCol.Size = UDim2.new(0.5, -6, 0, 0)
     rightCol.AutomaticSize = Enum.AutomaticSize.Y
     rightCol.ZIndex = 6
-    rightCol.Parent = page -- FIXED parenting references to prevent Cyclic Reference error
+    rightCol.Parent = page
 
     local rightColLayout = Instance.new("UIListLayout")
     rightColLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -744,14 +725,14 @@ function Window:AddTab(name, iconId)
     local pageLayout = Instance.new("UIListLayout")
     pageLayout.FillDirection = Enum.FillDirection.Horizontal
     pageLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    pageLayout.Padding = UDim.new(0, 8)
+    pageLayout.Padding = UDim.new(0, 12)
     pageLayout.Parent = page
 
     local pagePad = Instance.new("UIPadding")
-    pagePad.PaddingLeft = UDim.new(0, 10)
-    pagePad.PaddingRight = UDim.new(0, 10)
-    pagePad.PaddingTop = UDim.new(0, 10)
-    pagePad.PaddingBottom = UDim.new(0, 10)
+    pagePad.PaddingLeft = UDim.new(0, 14)
+    pagePad.PaddingRight = UDim.new(0, 14)
+    pagePad.PaddingTop = UDim.new(0, 14)
+    pagePad.PaddingBottom = UDim.new(0, 14)
     pagePad.Parent = page
 
     tabData._btn = tabBtn
@@ -790,13 +771,12 @@ function Window:AddTab(name, iconId)
     local Tab = {}
     Tab._order = 0
 
-    -- AddGroup - Generates a modular, collapsable glass block alternating left/right columns
     function Tab:AddGroup(title)
         tabData._groupCount = tabData._groupCount + 1
         local activeColumn = (tabData._groupCount % 2 == 1) and tabData._leftCol or tabData._rightCol
 
         local groupFrame, groupStroke, groupCorner = BuildGlassFrame({
-            Size = UDim2.new(1, 0, 0, 32), -- Compact height when minimized
+            Size = UDim2.new(1, 0, 0, 38),
             Radius = UDim.new(0, 8),
             ZIndex = 5
         })
@@ -806,11 +786,10 @@ function Window:AddTab(name, iconId)
         Tab._order = Tab._order + 1
         groupFrame.Parent = activeColumn
 
-        -- Highly Integrated Glass Header (Not solid gradient)
         local gHeader = Instance.new("Frame")
-        gHeader.Size = UDim2.new(1, 0, 0, 32)
+        gHeader.Size = UDim2.new(1, 0, 0, 38)
         gHeader.BackgroundColor3 = Theme.GlassSurface
-        gHeader.BackgroundTransparency = 0.90 -- Clean, translucent backing
+        gHeader.BackgroundTransparency = 0.90
         gHeader.BorderSizePixel = 0
         gHeader.ZIndex = 6
         gHeader.Parent = groupFrame
@@ -819,7 +798,6 @@ function Window:AddTab(name, iconId)
         ghCorner.CornerRadius = UDim.new(0, 8)
         ghCorner.Parent = gHeader
 
-        -- 1px Specular bottom divider line
         local divider = Instance.new("Frame")
         divider.Size = UDim2.new(1, 0, 0, 1)
         divider.Position = UDim2.new(0, 0, 1, -1)
@@ -829,11 +807,10 @@ function Window:AddTab(name, iconId)
         divider.ZIndex = 7
         divider.Parent = gHeader
 
-        -- Left Vertical Specular Accent Pin
         local pin = Instance.new("Frame")
         pin.BackgroundColor3 = Theme.Accent
-        pin.Size = UDim2.new(0, 3, 0, 14)
-        pin.Position = UDim2.new(0, 8, 0.5, -7)
+        pin.Size = UDim2.new(0, 3, 0, 16)
+        pin.Position = UDim2.new(0, 10, 0.5, -8)
         pin.BorderSizePixel = 0
         pin.ZIndex = 7
         pin.Parent = gHeader
@@ -845,29 +822,28 @@ function Window:AddTab(name, iconId)
         local gTitle = Instance.new("TextLabel")
         gTitle.BackgroundTransparency = 1
         gTitle.Size = UDim2.new(1, -48, 1, 0)
-        gTitle.Position = UDim2.new(0, 18, 0, 0)
+        gTitle.Position = UDim2.new(0, 20, 0, 0)
         gTitle.Font = Enum.Font.GothamBold
         gTitle.Text = title:upper()
         gTitle.TextColor3 = Theme.TextPrimary
-        gTitle.TextSize = 9.5
+        gTitle.TextSize = 10
         gTitle.TextXAlignment = Enum.TextXAlignment.Left
         gTitle.ZIndex = 7
         gTitle.Parent = gHeader
 
         local colBtn = Instance.new("ImageButton")
         colBtn.BackgroundTransparency = 1
-        colBtn.Size = UDim2.new(0, 14, 0, 14)
-        colBtn.Position = UDim2.new(1, -24, 0.5, -7)
-        colBtn.Image = "rbxassetid://10723415903" -- Down arrow/chevron
+        colBtn.Size = UDim2.new(0, 16, 0, 16)
+        colBtn.Position = UDim2.new(1, -26, 0.5, -8)
+        colBtn.Image = "rbxassetid://10723415903"
         colBtn.ImageColor3 = Theme.TextSecondary
         colBtn.ZIndex = 7
         colBtn.Parent = gHeader
 
-        -- Restructured Body Container with corrected spacing
-        local gBody = Instance.new("CanvasGroup")
+        local gBody = Instance.new("Frame")
         gBody.BackgroundTransparency = 1
-        gBody.Position = UDim2.new(0, 0, 0, 32)
-        gBody.Size = UDim2.new(1, 0, 1, -32)
+        gBody.Position = UDim2.new(0, 0, 0, 38)
+        gBody.Size = UDim2.new(1, 0, 1, -38)
         gBody.AutomaticSize = Enum.AutomaticSize.Y
         gBody.ZIndex = 6
         gBody.Parent = groupFrame
@@ -878,37 +854,22 @@ function Window:AddTab(name, iconId)
         gBodyLayout.Parent = gBody
 
         local gBodyPad = Instance.new("UIPadding")
-        gBodyPad.PaddingLeft = UDim.new(0, 10)
-        gBodyPad.PaddingRight = UDim.new(0, 10)
-        gBodyPad.PaddingTop = UDim.new(0, 12) -- Space between header and first widget
-        gBodyPad.PaddingBottom = UDim.new(0, 10)
+        gBodyPad.PaddingLeft = UDim.new(0, 12)
+        gBodyPad.PaddingRight = UDim.new(0, 12)
+        gBodyPad.PaddingTop = UDim.new(0, 14)
+        gBodyPad.PaddingBottom = UDim.new(0, 14)
         gBodyPad.Parent = gBody
 
         local isCollapsed = false
         colBtn.MouseButton1Click:Connect(function()
             isCollapsed = not isCollapsed
             if isCollapsed then
-                SmoothTween(colBtn, { Rotation = 180 }, 0.22, Theme.TweenStyle)
-                SmoothTween(gBody, { GroupTransparency = 1 }, 0.15, Enum.EasingStyle.Quad)
-                
-                groupFrame.AutomaticSize = Enum.AutomaticSize.None
-                SmoothTween(groupFrame, { Size = UDim2.new(1, 0, 0, 32) }, 0.22, Theme.TweenStyle):Completed:Connect(function()
-                    if isCollapsed then gBody.Visible = false end
-                end)
+                SmoothTween(colBtn, { Rotation = -90 }, 0.22, Theme.TweenStyle)
+                SmoothTween(groupFrame, { Size = UDim2.new(1, 0, 0, 38) }, 0.22, Theme.TweenStyle)
+                task.delay(0.1, function() gBody.Visible = false end)
             else
-                colBtn.Rotation = 180
                 gBody.Visible = true
-                gBody.GroupTransparency = 1
-                
                 SmoothTween(colBtn, { Rotation = 0 }, 0.22, Theme.TweenStyle)
-                SmoothTween(gBody, { GroupTransparency = 0 }, 0.2, Enum.EasingStyle.Quad)
-                
-                local targetHeight = 32 + gBody.AbsoluteSize.Y
-                SmoothTween(groupFrame, { Size = UDim2.new(1, 0, 0, targetHeight) }, 0.25, Theme.TweenStyle):Completed:Connect(function()
-                    if not isCollapsed then
-                        groupFrame.AutomaticSize = Enum.AutomaticSize.Y
-                    end
-                end)
             end
         end)
 
@@ -918,16 +879,13 @@ function Window:AddTab(name, iconId)
         function Group:AddButton(btnConfig)
             btnConfig = btnConfig or {}
             local btn, _ = BuildGlassFrame({
-                Size = UDim2.new(1, 0, 0, 34),
+                Size = UDim2.new(1, 0, 0, 38),
                 Radius = UDim.new(0, 6),
                 ZIndex = 7
             })
             btn.LayoutOrder = Group._order
             Group._order = Group._order + 1
             btn.ClipsDescendants = true
-
-            local uiScale_btn = Instance.new("UIScale")
-            uiScale_btn.Parent = btn
 
             local label = Instance.new("TextLabel")
             label.BackgroundTransparency = 1
@@ -936,7 +894,7 @@ function Window:AddTab(name, iconId)
             label.Font = Enum.Font.GothamSemibold
             label.Text = btnConfig.Text or "Button"
             label.TextColor3 = Theme.TextPrimary
-            label.TextSize = 10.5
+            label.TextSize = 11
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.ZIndex = 8
             label.Parent = btn
@@ -948,20 +906,23 @@ function Window:AddTab(name, iconId)
             click.ZIndex = 9
             click.Parent = btn
 
-            click.MouseEnter:Connect(function() SmoothTween(btn, { BackgroundTransparency = 0.8 }, 0.1, Enum.EasingStyle.Quad) end)
-            click.MouseLeave:Connect(function() SmoothTween(btn, { BackgroundTransparency = 1 - Theme.GlassOpacity }, 0.1, Enum.EasingStyle.Quad) end)
+            local btnScale = Instance.new("UIScale")
+            btnScale.Scale = 1.0
+            btnScale.Parent = btn
+
+            local function pressIn() SmoothTween(btnScale, {Scale = 0.97}, 0.08, Enum.EasingStyle.Quad) end
+            local function releaseOut() SmoothTween(btnScale, {Scale = 1.0}, 0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out) end
             
-            click.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    SmoothTween(uiScale_btn, { Scale = 0.96 }, 0.08, Enum.EasingStyle.Quad)
-                end
-            end)
-            click.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    SmoothTween(uiScale_btn, { Scale = 1.0 }, 0.18, Enum.EasingStyle.Back)
+            click.MouseButton1Down:Connect(pressIn)
+            click.MouseButton1Up:Connect(releaseOut)
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 and btnScale.Scale < 1.0 then
+                    releaseOut()
                 end
             end)
 
+            click.MouseEnter:Connect(function() SmoothTween(btn, { BackgroundTransparency = 0.8 }, 0.1, Enum.EasingStyle.Quad) end)
+            click.MouseLeave:Connect(function() SmoothTween(btn, { BackgroundTransparency = 1 - Theme.GlassOpacity }, 0.1, Enum.EasingStyle.Quad) end)
             click.MouseButton1Click:Connect(function()
                 if btnConfig.Callback then pcall(btnConfig.Callback) end
             end)
@@ -975,7 +936,7 @@ function Window:AddTab(name, iconId)
             local state = togConfig.Default or false
 
             local row, _ = BuildGlassFrame({
-                Size = UDim2.new(1, 0, 0, 34),
+                Size = UDim2.new(1, 0, 0, 38),
                 Radius = UDim.new(0, 6),
                 ZIndex = 7
             })
@@ -989,7 +950,7 @@ function Window:AddTab(name, iconId)
             label.Font = Enum.Font.GothamSemibold
             label.Text = togConfig.Text or "Toggle"
             label.TextColor3 = Theme.TextPrimary
-            label.TextSize = 10.5
+            label.TextSize = 11
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.ZIndex = 8
             label.Parent = row
@@ -997,22 +958,23 @@ function Window:AddTab(name, iconId)
             local track = Instance.new("Frame")
             track.BackgroundColor3 = state and Theme.Accent or Color3.fromRGB(55, 60, 75)
             track.BorderSizePixel = 0
-            track.Size = UDim2.new(0, 30, 0, 14)
-            track.Position = UDim2.new(1, -42, 0.5, -7)
+            track.Size = UDim2.new(0, 34, 0, 16)
+            track.Position = UDim2.new(1, -46, 0.5, -8)
             track.ZIndex = 8
             local trackCorner = Instance.new("UICorner")
-            trackCorner.CornerRadius = UDim.new(0, 4)
+            trackCorner.CornerRadius = UDim.new(0, 8)
             trackCorner.Parent = track
             track.Parent = row
 
             local thumb = Instance.new("Frame")
             thumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             thumb.BorderSizePixel = 0
-            thumb.Size = UDim2.new(0, 10, 0, 10)
-            thumb.Position = state and UDim2.new(1, -12, 0.5, -5) or UDim2.new(0, 2, 0.5, -5)
+            thumb.AnchorPoint = Vector2.new(0.5, 0.5)
+            thumb.Size = UDim2.new(0, 12, 0, 12)
+            thumb.Position = state and UDim2.new(1, -8, 0.5, 0) or UDim2.new(0, 8, 0.5, 0)
             thumb.ZIndex = 9
             local thumbCorner = Instance.new("UICorner")
-            thumbCorner.CornerRadius = UDim.new(0, 3)
+            thumbCorner.CornerRadius = UDim.new(0, 6)
             thumbCorner.Parent = thumb
             thumb.Parent = track
 
@@ -1024,12 +986,21 @@ function Window:AddTab(name, iconId)
             click.Parent = row
 
             local function updateToggle()
-                SmoothTween(track, { BackgroundColor3 = state and Theme.Accent or Color3.fromRGB(55, 60, 75) }, 0.15, Theme.TweenStyle)
-                local targetPos = state and UDim2.new(1, -12, 0.5, -5) or UDim2.new(0, 2, 0.5, -5)
-                
-                SmoothTween(thumb, { Position = targetPos, Size = UDim2.new(0, 13, 0, 9) }, 0.1, Enum.EasingStyle.Quad):Completed:Connect(function()
-                    SmoothTween(thumb, { Size = UDim2.new(0, 10, 0, 10) }, 0.14, Enum.EasingStyle.Back)
-                end)
+                if state then
+                    SmoothTween(thumb, {Size = UDim2.new(0, 16, 0, 10)}, 0.08, Enum.EasingStyle.Sine)
+                    SmoothTween(thumb, {Position = UDim2.new(1, -8, 0.5, 0)}, 0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+                    task.delay(0.15, function()
+                        SmoothTween(thumb, {Size = UDim2.new(0, 12, 0, 12)}, 0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+                    end)
+                    SmoothTween(track, {BackgroundColor3 = Theme.Accent}, 0.2, Theme.TweenStyle)
+                else
+                    SmoothTween(thumb, {Size = UDim2.new(0, 16, 0, 10)}, 0.08, Enum.EasingStyle.Sine)
+                    SmoothTween(thumb, {Position = UDim2.new(0, 8, 0.5, 0)}, 0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+                    task.delay(0.15, function()
+                        SmoothTween(thumb, {Size = UDim2.new(0, 12, 0, 12)}, 0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+                    end)
+                    SmoothTween(track, {BackgroundColor3 = Color3.fromRGB(55, 60, 75)}, 0.2, Theme.TweenStyle)
+                end
             end
 
             click.MouseButton1Click:Connect(function()
@@ -1057,7 +1028,7 @@ function Window:AddTab(name, iconId)
             local suffix = slidConfig.Suffix or ""
 
             local container, _ = BuildGlassFrame({
-                Size = UDim2.new(1, 0, 0, 44),
+                Size = UDim2.new(1, 0, 0, 48),
                 Radius = UDim.new(0, 6),
                 ZIndex = 7
             })
@@ -1066,24 +1037,24 @@ function Window:AddTab(name, iconId)
 
             local label = Instance.new("TextLabel")
             label.BackgroundTransparency = 1
-            label.Size = UDim2.new(1, -70, 0, 18)
-            label.Position = UDim2.new(0, 12, 0, 4)
+            label.Size = UDim2.new(1, -70, 0, 20)
+            label.Position = UDim2.new(0, 12, 0, 6)
             label.Font = Enum.Font.GothamSemibold
             label.Text = slidConfig.Text or "Slider"
             label.TextColor3 = Theme.TextPrimary
-            label.TextSize = 10.5
+            label.TextSize = 11
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.ZIndex = 8
             label.Parent = container
 
             local valLabel = Instance.new("TextLabel")
             valLabel.BackgroundTransparency = 1
-            valLabel.Size = UDim2.new(0, 60, 0, 18)
-            valLabel.Position = UDim2.new(1, -72, 0, 4)
+            valLabel.Size = UDim2.new(0, 60, 0, 20)
+            valLabel.Position = UDim2.new(1, -72, 0, 6)
             valLabel.Font = Enum.Font.GothamBold
             valLabel.Text = value .. suffix
             valLabel.TextColor3 = Theme.Accent
-            valLabel.TextSize = 10.5
+            valLabel.TextSize = 11
             valLabel.TextXAlignment = Enum.TextXAlignment.Right
             valLabel.ZIndex = 8
             valLabel.Parent = container
@@ -1091,7 +1062,7 @@ function Window:AddTab(name, iconId)
             local track = Instance.new("Frame")
             track.BackgroundColor3 = Color3.fromRGB(50, 55, 70)
             track.Size = UDim2.new(1, -24, 0, 4)
-            track.Position = UDim2.new(0, 12, 1, -12)
+            track.Position = UDim2.new(0, 12, 1, -14)
             track.BorderSizePixel = 0
             track.ZIndex = 8
             track.Parent = container
@@ -1113,81 +1084,53 @@ function Window:AddTab(name, iconId)
 
             local thumb = Instance.new("Frame")
             thumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            thumb.Size = UDim2.new(0, 8, 0, 8)
-            thumb.Position = UDim2.new((value - min) / (max - min), -4, 0.5, -4)
+            thumb.Size = UDim2.new(0, 10, 0, 10)
+            thumb.Position = UDim2.new((value - min) / (max - min), -5, 0.5, -5)
             thumb.ZIndex = 10
             thumb.Parent = track
 
             local thumbCorner = Instance.new("UICorner")
-            thumbCorner.CornerRadius = UDim.new(0, 3)
+            thumbCorner.CornerRadius = UDim.new(0, 4)
             thumbCorner.Parent = thumb
 
-            local tooltip, _, tooltipCorner = BuildGlassFrame({
-                Size = UDim2.new(0, 32, 0, 18),
-                Radius = UDim.new(0, 4),
-                ZIndex = 15
-            })
+            -- Floating Tooltip
+            local tooltip = Instance.new("TextLabel")
+            tooltip.AnchorPoint = Vector2.new(0.5, 1)
+            tooltip.Size = UDim2.new(0, 40, 0, 18)
+            tooltip.BackgroundColor3 = Theme.Accent
+            tooltip.TextColor3 = Color3.fromRGB(255, 255, 255)
+            tooltip.Font = Enum.Font.GothamBold
+            tooltip.TextSize = 9
+            tooltip.Text = value .. suffix
             tooltip.BackgroundTransparency = 1
-            tooltip.Size = UDim2.new(0, 0, 0, 0)
-            tooltip.Position = UDim2.new(0.5, 0, 0, -14)
-            tooltip.ClipsDescendants = true
-            tooltip.ZIndex = 15
-            tooltip.Parent = thumb
+            tooltip.TextTransparency = 1
+            tooltip.ZIndex = 11
+            tooltip.Parent = container
 
-            local tooltipStroke = tooltip:FindFirstChildOfClass("UIStroke")
-            if tooltipStroke then tooltipStroke.Enabled = false end
+            local tCorner = Instance.new("UICorner")
+            tCorner.CornerRadius = UDim.new(0, 4)
+            tCorner.Parent = tooltip
 
-            local tooltipLabel = Instance.new("TextLabel")
-            tooltipLabel.BackgroundTransparency = 1
-            tooltipLabel.Size = UDim2.new(1, 0, 1, 0)
-            tooltipLabel.Font = Enum.Font.GothamBold
-            tooltipLabel.Text = value .. suffix
-            tooltipLabel.TextColor3 = Theme.Accent
-            tooltipLabel.TextSize = 8
-            tooltipLabel.TextTransparency = 1
-            tooltipLabel.ZIndex = 16
-            tooltipLabel.Parent = tooltip
+            local function showTooltip()
+                SmoothTween(tooltip, {BackgroundTransparency = 0, TextTransparency = 0}, 0.15)
+            end
+            local function hideTooltip()
+                SmoothTween(tooltip, {BackgroundTransparency = 1, TextTransparency = 1}, 0.15)
+            end
 
             local function updateSlider(inputX)
                 local ratio = math.clamp((inputX - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
                 value = math.floor(min + (max - min) * ratio)
                 fill.Size = UDim2.new(ratio, 0, 1, 0)
-                thumb.Position = UDim2.new(ratio, -4, 0.5, -4)
+                thumb.Position = UDim2.new(ratio, -5, 0.5, -5)
+                tooltip.Position = UDim2.new(ratio, 0, 0, 24) 
                 valLabel.Text = value .. suffix
-                tooltipLabel.Text = value .. suffix
+                tooltip.Text = value .. suffix
                 if slidConfig.Callback then pcall(slidConfig.Callback, value) end
             end
 
-            local function showTooltip()
-                if tooltipStroke then tooltipStroke.Enabled = true end
-                SmoothTween(tooltip, { Size = UDim2.new(0, 32, 0, 18), Position = UDim2.new(0.5, -16, 0, -22), BackgroundTransparency = 0.1 }, 0.16, Enum.EasingStyle.Quad)
-                SmoothTween(tooltipLabel, { TextTransparency = 0 }, 0.16, Enum.EasingStyle.Quad)
-            end
-
-            local function hideTooltip()
-                SmoothTween(tooltip, { Size = UDim2.new(0, 0, 0, 0), Position = UDim2.new(0.5, 0, 0, -14), BackgroundTransparency = 1 }, 0.16, Enum.EasingStyle.Quad)
-                SmoothTween(tooltipLabel, { TextTransparency = 1 }, 0.16, Enum.EasingStyle.Quad):Completed:Connect(function()
-                    if tooltipStroke then tooltipStroke.Enabled = false end
-                end)
-            end
-
-            SetupUnifiedDrag(track, function(pos) 
-                showTooltip()
-                updateSlider(pos.X) 
-            end, function(pos) 
-                updateSlider(pos.X) 
-            end, function()
-                hideTooltip()
-            end)
-
-            SetupUnifiedDrag(thumb, function(pos) 
-                showTooltip()
-                updateSlider(pos.X) 
-            end, function(pos) 
-                updateSlider(pos.X) 
-            end, function()
-                hideTooltip()
-            end)
+            SetupUnifiedDrag(track, function(pos) showTooltip() updateSlider(pos.X) end, function(pos) updateSlider(pos.X) end, function() hideTooltip() end)
+            SetupUnifiedDrag(thumb, function(pos) showTooltip() updateSlider(pos.X) end, function(pos) updateSlider(pos.X) end, function() hideTooltip() end)
 
             container.Parent = gBody
             return {
@@ -1196,9 +1139,8 @@ function Window:AddTab(name, iconId)
                     value = val
                     local ratio = (val - min) / (max - min)
                     fill.Size = UDim2.new(ratio, 0, 1, 0)
-                    thumb.Position = UDim2.new(ratio, -4, 0.5, -4)
+                    thumb.Position = UDim2.new(ratio, -5, 0.5, -5)
                     valLabel.Text = val .. suffix
-                    tooltipLabel.Text = val .. suffix
                     if slidConfig.Callback then pcall(slidConfig.Callback, val) end
                 end,
                 Get = function() return value end
@@ -1210,23 +1152,24 @@ function Window:AddTab(name, iconId)
             local options = dropConfig.Options or {}
             local selected = dropConfig.Default or (options[1] or "Select...")
             local isOpen = false
+            local useSearch = #options > 5
 
             local container, _ = BuildGlassFrame({
-                Size = UDim2.new(1, 0, 0, 34),
+                Size = UDim2.new(1, 0, 0, 38),
                 Radius = UDim.new(0, 6),
                 ZIndex = 7
             })
-            container.LayoutOrder = Tab._order
-            Tab._order = Tab._order + 1
+            container.LayoutOrder = Group._order
+            Group._order = Group._order + 1
 
             local label = Instance.new("TextLabel")
             label.BackgroundTransparency = 1
-            label.Size = UDim2.new(0.5, 0, 0, 34)
+            label.Size = UDim2.new(0.5, 0, 0, 38)
             label.Position = UDim2.new(0, 12, 0, 0)
             label.Font = Enum.Font.GothamSemibold
             label.Text = dropConfig.Text or "Dropdown"
             label.TextColor3 = Theme.TextPrimary
-            label.TextSize = 10.5
+            label.TextSize = 11
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.ZIndex = 8
             label.Parent = container
@@ -1234,12 +1177,12 @@ function Window:AddTab(name, iconId)
             local trigger = Instance.new("TextButton")
             trigger.BackgroundColor3 = Color3.fromRGB(45, 50, 65)
             trigger.BorderSizePixel = 0
-            trigger.Size = UDim2.new(0.45, 0, 0, 22)
-            trigger.Position = UDim2.new(0.55, -12, 0, 6)
+            trigger.Size = UDim2.new(0.45, 0, 0, 24)
+            trigger.Position = UDim2.new(0.55, -12, 0, 7)
             trigger.Font = Enum.Font.GothamSemibold
             trigger.Text = selected .. "  ▾"
             trigger.TextColor3 = Theme.TextSecondary
-            trigger.TextSize = 10.5
+            trigger.TextSize = 11
             trigger.ZIndex = 8
             trigger.Parent = container
 
@@ -1249,119 +1192,117 @@ function Window:AddTab(name, iconId)
 
             local listHolder = Instance.new("Frame")
             listHolder.BackgroundTransparency = 1
-            listHolder.Position = UDim2.new(0, 0, 0, 34)
-            listHolder.Size = UDim2.new(1, 0, 1, -34)
+            listHolder.Position = UDim2.new(0, 0, 0, 38)
+            listHolder.Size = UDim2.new(1, 0, 1, -38)
             listHolder.ClipsDescendants = true
             listHolder.ZIndex = 8
             listHolder.Parent = container
 
-            local holderLayout = Instance.new("UIListLayout")
-            holderLayout.SortOrder = Enum.SortOrder.LayoutOrder
-            holderLayout.Parent = listHolder
+            local searchBox = Instance.new("TextBox")
+            searchBox.Size = UDim2.new(1, 0, 0, useSearch and 28 or 0)
+            searchBox.BackgroundColor3 = Color3.fromRGB(40, 45, 60)
+            searchBox.BackgroundTransparency = 0.4
+            searchBox.Font = Enum.Font.Gotham
+            searchBox.PlaceholderText = "Search..."
+            searchBox.PlaceholderColor3 = Theme.TextMuted
+            searchBox.TextColor3 = Theme.TextPrimary
+            searchBox.TextSize = 10
+            searchBox.Text = ""
+            searchBox.ZIndex = 9
+            searchBox.Visible = useSearch
+            searchBox.Parent = listHolder
 
-            local searchBoxFrame = Instance.new("Frame")
-            searchBoxFrame.BackgroundColor3 = Color3.fromRGB(24, 26, 42)
-            searchBoxFrame.Size = UDim2.new(1, -12, 0, 24)
-            searchBoxFrame.Position = UDim2.new(0, 6, 0, 4)
-            searchBoxFrame.ZIndex = 9
-            searchBoxFrame.Visible = false
-            searchBoxFrame.Parent = listHolder
+            local searchCorner = Instance.new("UICorner")
+            searchCorner.CornerRadius = UDim.new(0, 4)
+            searchCorner.Parent = searchBox
+            local searchPad = Instance.new("UIPadding")
+            searchPad.PaddingLeft = UDim.new(0, 8)
+            searchPad.Parent = searchBox
 
-            local sbfCorner = Instance.new("UICorner")
-            sbfCorner.CornerRadius = UDim.new(0, 4)
-            sbfCorner.Parent = searchBoxFrame
+            local optionsContainer = Instance.new("Frame")
+            optionsContainer.BackgroundTransparency = 1
+            optionsContainer.Size = UDim2.new(1, 0, 1, useSearch and -32 or 0)
+            optionsContainer.Position = UDim2.new(0, 0, 0, useSearch and 32 or 0)
+            optionsContainer.Parent = listHolder
 
-            local sbfStroke = Instance.new("UIStroke")
-            sbfStroke.Color = Color3.fromRGB(255, 255, 255)
-            sbfStroke.Transparency = 0.93
-            sbfStroke.Parent = searchBoxFrame
+            local optLayout = Instance.new("UIListLayout")
+            optLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            optLayout.Parent = optionsContainer
 
-            local dropdownSearch = Instance.new("TextBox")
-            dropdownSearch.BackgroundTransparency = 1
-            dropdownSearch.Size = UDim2.new(1, -16, 1, 0)
-            dropdownSearch.Position = UDim2.new(0, 8, 0, 0)
-            dropdownSearch.Font = Enum.Font.Gotham
-            dropdownSearch.PlaceholderText = "Search item..."
-            dropdownSearch.PlaceholderColor3 = Theme.TextMuted
-            dropdownSearch.Text = ""
-            dropdownSearch.TextColor3 = Theme.TextPrimary
-            dropdownSearch.TextSize = 10
-            dropdownSearch.TextXAlignment = Enum.TextXAlignment.Left
-            dropdownSearch.ZIndex = 9
-            dropdownSearch.Parent = searchBoxFrame
+            local hoverInd = Instance.new("Frame")
+            hoverInd.BackgroundColor3 = Theme.Accent
+            hoverInd.BackgroundTransparency = 0.85
+            hoverInd.Size = UDim2.new(1, 0, 0, 26)
+            hoverInd.ZIndex = 8
+            hoverInd.Visible = false
+            local hoverIndCorner = Instance.new("UICorner")
+            hoverIndCorner.CornerRadius = UDim.new(0, 4)
+            hoverIndCorner.Parent = hoverInd
+            hoverInd.Parent = optionsContainer
 
             local function rebuildList()
-                for _, c in ipairs(listHolder:GetChildren()) do
+                for _, c in ipairs(optionsContainer:GetChildren()) do
                     if c:IsA("TextButton") then c:Destroy() end
                 end
-
-                local activeList = {}
+                local filterText = string.lower(searchBox.Text)
+                local count = 0
                 for index, value in ipairs(options) do
-                    if dropdownSearch.Text == "" or string.find(string.lower(value), string.lower(dropdownSearch.Text)) then
-                        table.insert(activeList, value)
+                    if filterText == "" or string.find(string.lower(value), filterText) then
+                        count = count + 1
+                        local optBtn = Instance.new("TextButton")
+                        optBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                        optBtn.BackgroundTransparency = 1
+                        optBtn.BorderSizePixel = 0
+                        optBtn.Size = UDim2.new(1, 0, 0, 26)
+                        optBtn.Font = Enum.Font.Gotham
+                        optBtn.Text = "  " .. value
+                        optBtn.TextColor3 = (value == selected) and Theme.Accent or Theme.TextSecondary
+                        optBtn.TextSize = 10
+                        optBtn.TextXAlignment = Enum.TextXAlignment.Left
+                        optBtn.ZIndex = 9
+                        optBtn.Parent = optionsContainer
+
+                        optBtn.MouseEnter:Connect(function()
+                            hoverInd.Visible = true
+                            SmoothTween(hoverInd, {Position = UDim2.new(0, 0, 0, (count-1)*26), BackgroundTransparency = 0.7}, 0.12, Enum.EasingStyle.Quad)
+                        end)
+                        optBtn.MouseLeave:Connect(function()
+                            SmoothTween(hoverInd, {BackgroundTransparency = 0.85}, 0.12, Enum.EasingStyle.Quad)
+                        end)
+                        
+                        optBtn.MouseButton1Click:Connect(function()
+                            selected = value
+                            trigger.Text = value .. "  ▾"
+                            isOpen = false
+                            SmoothTween(container, { Size = UDim2.new(1, 0, 0, 38) }, 0.15)
+                            searchBox.Text = ""
+                            rebuildList()
+                            if dropConfig.Callback then pcall(dropConfig.Callback, value) end
+                        end)
                     end
                 end
-
-                for index, value in ipairs(activeList) do
-                    local optBtn = Instance.new("TextButton")
-                    optBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                    optBtn.BackgroundTransparency = (value == selected) and 0.9 or 1
-                    optBtn.BorderSizePixel = 0
-                    optBtn.Size = UDim2.new(1, 0, 0, 26)
-                    optBtn.Font = Enum.Font.Gotham
-                    optBtn.Text = "  " .. value
-                    optBtn.TextColor3 = (value == selected) and Theme.Accent or Theme.TextSecondary
-                    optBtn.TextSize = 10
-                    optBtn.TextXAlignment = Enum.TextXAlignment.Left
-                    optBtn.ZIndex = 9
-                    optBtn.Parent = listHolder
-
-                    local hoverIndicator = Instance.new("Frame")
-                    hoverIndicator.BackgroundColor3 = Theme.Accent
-                    hoverIndicator.Size = UDim2.new(0, 0, 0, 16)
-                    hoverIndicator.Position = UDim2.new(0, 4, 0.5, -8)
-                    hoverIndicator.BorderSizePixel = 0
-                    hoverIndicator.ZIndex = 10
-                    hoverIndicator.Parent = optBtn
-
-                    local hiCorner = Instance.new("UICorner")
-                    hiCorner.CornerRadius = UDim.new(0, 2)
-                    hiCorner.Parent = hoverIndicator
-
-                    optBtn.MouseEnter:Connect(function()
-                        SmoothTween(hoverIndicator, { Size = UDim2.new(0, 3, 0, 16) }, 0.1, Enum.EasingStyle.Quad)
-                    end)
-                    optBtn.MouseLeave:Connect(function()
-                        SmoothTween(hoverIndicator, { Size = UDim2.new(0, 0, 0, 16) }, 0.1, Enum.EasingStyle.Quad)
-                    end)
-
-                    optBtn.MouseButton1Click:Connect(function()
-                        selected = value
-                        trigger.Text = value .. "  ▾"
-                        isOpen = false
-                        SmoothTween(container, { Size = UDim2.new(1, 0, 0, 34) }, 0.15)
-                        rebuildList()
-                        if dropConfig.Callback then pcall(dropConfig.Callback, value) end
-                    end)
-                end
-
-                local heightOfEntries = #activeList * 26
-                local targetHeight = 34 + 32 + heightOfEntries
-                SmoothTween(container, { Size = UDim2.new(1, 0, 0, targetHeight) }, 0.2, Enum.EasingStyle.Quint)
             end
-
-            dropdownSearch:GetPropertyChangedSignal("Text"):Connect(rebuildList)
+            
+            searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+                if isOpen then rebuildList() end
+            end)
 
             trigger.MouseButton1Click:Connect(function()
                 isOpen = not isOpen
                 if isOpen then
-                    searchBoxFrame.Visible = true
-                    dropdownSearch.Text = ""
                     rebuildList()
+                    local visCount = 0
+                    local filterText = string.lower(searchBox.Text)
+                    for _, v in ipairs(options) do
+                        if filterText == "" or string.find(string.lower(v), filterText) then visCount = visCount + 1 end
+                    end
+                    local baseHeight = 38
+                    local searchHeight = useSearch and 32 or 0
+                    local listHeight = visCount * 26
+                    local targetHeight = baseHeight + searchHeight + listHeight
+                    SmoothTween(container, { Size = UDim2.new(1, 0, 0, targetHeight) }, 0.2, Enum.EasingStyle.Quint)
                 else
-                    SmoothTween(container, { Size = UDim2.new(1, 0, 0, 34) }, 0.15):Completed:Connect(function()
-                        if not isOpen then searchBoxFrame.Visible = false end
-                    end)
+                    SmoothTween(container, { Size = UDim2.new(1, 0, 0, 38) }, 0.15)
                 end
             end)
 
@@ -1383,21 +1324,21 @@ function Window:AddTab(name, iconId)
         function Group:AddInput(inpConfig)
             inpConfig = inpConfig or {}
             local container, _ = BuildGlassFrame({
-                Size = UDim2.new(1, 0, 0, 44),
+                Size = UDim2.new(1, 0, 0, 48),
                 Radius = UDim.new(0, 6),
                 ZIndex = 7
             })
-            container.LayoutOrder = Tab._order
+            container.LayoutOrder = Group._order
             Group._order = Group._order + 1
 
             local label = Instance.new("TextLabel")
             label.BackgroundTransparency = 1
-            label.Size = UDim2.new(1, -12, 0, 16)
-            label.Position = UDim2.new(0, 12, 0, 4)
+            label.Size = UDim2.new(1, -12, 0, 18)
+            label.Position = UDim2.new(0, 12, 0, 6)
             label.Font = Enum.Font.GothamSemibold
             label.Text = inpConfig.Text or "Input"
             label.TextColor3 = Theme.TextSecondary
-            label.TextSize = 10
+            label.TextSize = 11
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.ZIndex = 8
             label.Parent = container
@@ -1405,14 +1346,14 @@ function Window:AddTab(name, iconId)
             local box = Instance.new("TextBox")
             box.BackgroundColor3 = Color3.fromRGB(40, 45, 60)
             box.BackgroundTransparency = 0.4
-            box.Size = UDim2.new(1, -24, 0, 18)
-            box.Position = UDim2.new(0, 12, 1, -22)
+            box.Size = UDim2.new(1, -24, 0, 20)
+            box.Position = UDim2.new(0, 12, 1, -26)
             box.Font = Enum.Font.Gotham
             box.PlaceholderText = inpConfig.Placeholder or "Write here..."
             box.PlaceholderColor3 = Theme.TextMuted
             box.Text = inpConfig.Default or ""
             box.TextColor3 = Theme.TextPrimary
-            box.TextSize = 10.5
+            box.TextSize = 11
             box.TextXAlignment = Enum.TextXAlignment.Left
             box.ZIndex = 8
             box.Parent = container
@@ -1442,7 +1383,7 @@ function Window:AddTab(name, iconId)
             local listening = false
 
             local row, _ = BuildGlassFrame({
-                Size = UDim2.new(1, 0, 0, 34),
+                Size = UDim2.new(1, 0, 0, 38),
                 Radius = UDim.new(0, 6),
                 ZIndex = 7
             })
@@ -1456,15 +1397,15 @@ function Window:AddTab(name, iconId)
             label.Font = Enum.Font.GothamSemibold
             label.Text = kbConfig.Text or "Keybind"
             label.TextColor3 = Theme.TextPrimary
-            label.TextSize = 10.5
+            label.TextSize = 11
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.ZIndex = 8
             label.Parent = row
 
             local trigger = Instance.new("TextButton")
             trigger.BackgroundColor3 = Color3.fromRGB(45, 50, 65)
-            trigger.Size = UDim2.new(0, 75, 0, 22)
-            trigger.Position = UDim2.new(1, -87, 0.5, -11)
+            trigger.Size = UDim2.new(0, 80, 0, 24)
+            trigger.Position = UDim2.new(1, -92, 0.5, -12)
             trigger.Font = Enum.Font.GothamBold
             trigger.Text = (key == Enum.KeyCode.Unknown) and "NONE" or key.Name
             trigger.TextColor3 = Theme.Accent
@@ -1511,7 +1452,7 @@ function Window:AddTab(name, iconId)
             local isOpen = false
 
             local container, _ = BuildGlassFrame({
-                Size = UDim2.new(1, 0, 0, 36),
+                Size = UDim2.new(1, 0, 0, 40),
                 Radius = UDim.new(0, 6),
                 ZIndex = 7
             })
@@ -1520,12 +1461,12 @@ function Window:AddTab(name, iconId)
 
             local label = Instance.new("TextLabel")
             label.BackgroundTransparency = 1
-            label.Size = UDim2.new(1, -70, 0, 36)
+            label.Size = UDim2.new(1, -70, 0, 40)
             label.Position = UDim2.new(0, 12, 0, 0)
             label.Font = Enum.Font.GothamSemibold
             label.Text = cpConfig.Text or "Color Picker"
             label.TextColor3 = Theme.TextPrimary
-            label.TextSize = 10.5
+            label.TextSize = 11
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.ZIndex = 8
             label.Parent = container
@@ -1533,8 +1474,8 @@ function Window:AddTab(name, iconId)
             local swatch = Instance.new("TextButton")
             swatch.BackgroundColor3 = color
             swatch.BorderSizePixel = 0
-            swatch.Size = UDim2.new(0, 32, 0, 20)
-            swatch.Position = UDim2.new(1, -44, 0, 8)
+            swatch.Size = UDim2.new(0, 36, 0, 22)
+            swatch.Position = UDim2.new(1, -48, 0, 9)
             swatch.Text = ""
             swatch.ZIndex = 8
             swatch.Parent = container
@@ -1545,7 +1486,7 @@ function Window:AddTab(name, iconId)
 
             local tray = Instance.new("Frame")
             tray.BackgroundTransparency = 1
-            tray.Position = UDim2.new(0, 0, 0, 36)
+            tray.Position = UDim2.new(0, 0, 0, 40)
             tray.Size = UDim2.new(1, 0, 0, 0)
             tray.ClipsDescendants = true
             tray.ZIndex = 8
@@ -1764,7 +1705,7 @@ function Window:AddTab(name, iconId)
                     SmoothTween(container, { Size = UDim2.new(1, 0, 0, 166) }, 0.22, Theme.TweenStyle, Theme.TweenDirection)
                     SmoothTween(tray, { Size = UDim2.new(1, 0, 0, 130) }, 0.22, Theme.TweenStyle, Theme.TweenDirection)
                 else
-                    SmoothTween(container, { Size = UDim2.new(1, 0, 0, 36) }, 0.18, Enum.EasingStyle.Quad)
+                    SmoothTween(container, { Size = UDim2.new(1, 0, 0, 40) }, 0.18, Enum.EasingStyle.Quad)
                     SmoothTween(tray, { Size = UDim2.new(1, 0, 0, 0) }, 0.18, Enum.EasingStyle.Quad)
                 end
             end)
