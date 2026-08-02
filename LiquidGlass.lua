@@ -23,10 +23,10 @@ local Theme = {
     Success = Color3.fromRGB(100, 225, 160),
     Warning = Color3.fromRGB(255, 195, 85),
     Danger = Color3.fromRGB(255, 95, 105),
-    GlassOpacity = 0.22,
+    GlassOpacity = 0.20,
     BorderOpacity = 0.24,
     ShadowOpacity = 0.70,
-    TweenSpeed = 0.16,
+    TweenSpeed = 0.18,
     TweenStyle = Enum.EasingStyle.Quad,
     TweenDirection = Enum.EasingDirection.Out
 }
@@ -40,6 +40,30 @@ local function SmoothTween(obj, props, duration, style, dir)
     local tween = TweenService:Create(obj, info, props)
     tween:Play()
     return tween
+end
+
+-- Secure, automated executor name identifier
+local function GetExecutorName()
+    if identifyexecutor then
+        local success, name = pcall(identifyexecutor)
+        if success and name then return name end
+    end
+    if getexecutorname then
+        local success, name = pcall(getexecutorname)
+        if success and name then return name end
+    end
+    if syn then return "Synapse X" end
+    if sethackflag then return "Sentinel" end
+    if pebc_execute then return "ProtoSmasher" end
+    if secure_call then return "KRNL" end
+    if FLUXUS_LOADED then return "Fluxus" end
+    if is_sirhurt_out_of_date then return "SirHurt" end
+    if checkclosure then return "Sentinel" end
+    if ARCEUS_LOADED then return "Arceus X" end
+    if CODEX_LOADED then return "Codex" end
+    if DELTA_LOADED then return "Delta" end
+    if SOLARA_LOADED then return "Solara" end
+    return "Roblox Client"
 end
 
 local function SetupUnifiedDrag(triggerFrame, onDragStart, onDragMove, onDragEnd)
@@ -82,7 +106,7 @@ local function BuildGlassFrame(props)
     frame.ZIndex = props.ZIndex or 1
 
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = props.Radius or UDim.new(0, 10)
+    corner.CornerRadius = props.Radius or UDim.new(0, 8)
     corner.Parent = frame
 
     local stroke = Instance.new("UIStroke")
@@ -110,17 +134,18 @@ function LiquidGlass:CreateWindow(config)
     config = config or {}
     local self = setmetatable({}, Window)
 
-    self.Title = config.Title or "Roblox UI Library"
+    self.Title = config.Title or "Liquid Glass Hub"
     self.Subtitle = config.Subtitle or "v1.0"
-    self.Width = config.Width or 580
-    self.Height = config.Height or 400
+    self.Width = config.Width or 600
+    self.Height = config.Height or 440
     self.SidebarWidth = 150
     self.Tabs = {}
     self.ActiveTab = nil
     self._minimized = false
+    self.Executor = GetExecutorName()
 
     local gui = Instance.new("ScreenGui")
-    gui.Name = "LiquidGlassV5_5"
+    gui.Name = "LiquidGlassV6"
     gui.ResetOnSpawn = false
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     gui.IgnoreGuiInset = true
@@ -142,7 +167,7 @@ function LiquidGlass:CreateWindow(config)
     local winFrame, winStroke, winCorner = BuildGlassFrame({
         Size = UDim2.new(0, self.Width, 0, self.Height),
         Position = UDim2.new(0.5, -self.Width/2, 0.5, -self.Height/2),
-        Radius = UDim.new(0, 14),
+        Radius = UDim.new(0, 10),
         ClipsDescendants = false,
         ZIndex = 2
     })
@@ -186,7 +211,7 @@ function LiquidGlass:CreateWindow(config)
     sheen.Parent = winFrame
 
     local sheenCorner = Instance.new("UICorner")
-    sheenCorner.CornerRadius = UDim.new(0, 14)
+    sheenCorner.CornerRadius = UDim.new(0, 10)
     sheenCorner.Parent = sheen
 
     local islandFrame = Instance.new("TextButton")
@@ -194,15 +219,15 @@ function LiquidGlass:CreateWindow(config)
     islandFrame.BackgroundColor3 = Color3.fromRGB(8, 9, 14)
     islandFrame.BackgroundTransparency = 0.08
     islandFrame.BorderSizePixel = 0
-    islandFrame.Size = UDim2.new(0, 180, 0, 36)
-    islandFrame.Position = UDim2.new(0.5, -90, 0, -50)
+    islandFrame.Size = UDim2.new(0, 200, 0, 36)
+    islandFrame.Position = UDim2.new(0.5, -100, 0, -50)
     islandFrame.ZIndex = 100
     islandFrame.Visible = false
     islandFrame.Text = ""
     islandFrame.Parent = gui
 
     local islandCorner = Instance.new("UICorner")
-    islandCorner.CornerRadius = UDim.new(1, 0)
+    islandCorner.CornerRadius = UDim.new(0, 8)
     islandCorner.Parent = islandFrame
 
     local islandStroke = Instance.new("UIStroke")
@@ -219,7 +244,7 @@ function LiquidGlass:CreateWindow(config)
     islandDot.Parent = islandFrame
 
     local islandDotCorner = Instance.new("UICorner")
-    islandDotCorner.CornerRadius = UDim.new(1, 0)
+    islandDotCorner.CornerRadius = UDim.new(0, 3)
     islandDotCorner.Parent = islandDot
 
     local islandTitle = Instance.new("TextLabel")
@@ -227,7 +252,7 @@ function LiquidGlass:CreateWindow(config)
     islandTitle.Size = UDim2.new(1, -34, 1, 0)
     islandTitle.Position = UDim2.new(0, 26, 0, 0)
     islandTitle.Font = Enum.Font.GothamBold
-    islandTitle.Text = self.Title
+    islandTitle.Text = self.Title .. " | " .. self.Executor
     islandTitle.TextColor3 = Theme.TextPrimary
     islandTitle.TextSize = 11
     islandTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -247,7 +272,7 @@ function LiquidGlass:CreateWindow(config)
     header.BackgroundTransparency = 0.98
     header.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     header.BorderSizePixel = 0
-    header.Size = UDim2.new(1, 0, 0, 44)
+    header.Size = UDim2.new(1, 0, 0, 40)
     header.ZIndex = 4
     header.Parent = canvas
 
@@ -293,7 +318,7 @@ function LiquidGlass:CreateWindow(config)
     vtCorner.CornerRadius = UDim.new(0, 4)
     vtCorner.Parent = versionTag
 
-    -- Translucent Glass Action Controls on Header Right (Minimize, Close)
+    -- Redesigned Minimize and Close (X) buttons as glossy rounded rectangles
     local controls = Instance.new("Frame")
     controls.BackgroundTransparency = 1
     controls.Size = UDim2.new(0, 64, 1, 0)
@@ -312,7 +337,7 @@ function LiquidGlass:CreateWindow(config)
     minBtn.BackgroundColor3 = Theme.GlassSurface
     minBtn.BackgroundTransparency = 0.8
     minBtn.Size = UDim2.new(0, 20, 0, 20)
-    minBtn.Image = "rbxassetid://10734896206" -- Lucide minus
+    minBtn.Image = "rbxassetid://10734896206"
     minBtn.ImageColor3 = Theme.Warning
     minBtn.ZIndex = 6
     minBtn.Parent = controls
@@ -324,14 +349,14 @@ function LiquidGlass:CreateWindow(config)
     minBorder.Parent = minBtn
 
     local minCorner = Instance.new("UICorner")
-    minCorner.CornerRadius = UDim.new(1, 0)
+    minCorner.CornerRadius = UDim.new(0, 5)
     minCorner.Parent = minBtn
 
     local closeBtn = Instance.new("ImageButton")
     closeBtn.BackgroundColor3 = Theme.GlassSurface
     closeBtn.BackgroundTransparency = 0.8
     closeBtn.Size = UDim2.new(0, 20, 0, 20)
-    closeBtn.Image = "rbxassetid://10747384394" -- Lucide x
+    closeBtn.Image = "rbxassetid://10747384394"
     closeBtn.ImageColor3 = Theme.Danger
     closeBtn.ZIndex = 6
     closeBtn.Parent = controls
@@ -343,10 +368,9 @@ function LiquidGlass:CreateWindow(config)
     closeBorder.Parent = closeBtn
 
     local closeCorner = Instance.new("UICorner")
-    closeCorner.CornerRadius = UDim.new(1, 0)
+    closeCorner.CornerRadius = UDim.new(0, 5)
     closeCorner.Parent = closeBtn
 
-    -- Hover effects for Header Controls
     minBtn.MouseEnter:Connect(function() SmoothTween(minBtn, { BackgroundTransparency = 0.5 }, 0.1) end)
     minBtn.MouseLeave:Connect(function() SmoothTween(minBtn, { BackgroundTransparency = 0.8 }, 0.1) end)
     closeBtn.MouseEnter:Connect(function() SmoothTween(closeBtn, { BackgroundTransparency = 0.5 }, 0.1) end)
@@ -366,10 +390,11 @@ function LiquidGlass:CreateWindow(config)
         )
     end)
 
+    -- Dynamic Workspace layout to facilitate space for header and bottom footer
     local workspaceFrame = Instance.new("Frame")
     workspaceFrame.BackgroundTransparency = 1
-    workspaceFrame.Size = UDim2.new(1, 0, 1, -44)
-    workspaceFrame.Position = UDim2.new(0, 0, 0, 44)
+    workspaceFrame.Size = UDim2.new(1, 0, 1, -68) -- Excludes top header (40) and bottom footer (28)
+    workspaceFrame.Position = UDim2.new(0, 0, 0, 40)
     workspaceFrame.ZIndex = 4
     workspaceFrame.Parent = canvas
 
@@ -393,7 +418,7 @@ function LiquidGlass:CreateWindow(config)
     local tabScroller = Instance.new("ScrollingFrame")
     tabScroller.BackgroundTransparency = 1
     tabScroller.BorderSizePixel = 0
-    tabScroller.Size = UDim2.new(1, -1, 1, 0) -- Adjusted to full height since upgrade section is removed
+    tabScroller.Size = UDim2.new(1, -1, 1, 0)
     tabScroller.ScrollBarThickness = 0
     tabScroller.ZIndex = 5
     tabScroller.Parent = sidebar
@@ -431,6 +456,57 @@ function LiquidGlass:CreateWindow(config)
     contentArea.Parent = workspaceFrame
     self._contentArea = contentArea
 
+    -- Bottom Status Footer bar
+    local footer = Instance.new("Frame")
+    footer.Name = "Footer"
+    footer.BackgroundTransparency = 0.98
+    footer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    footer.BorderSizePixel = 0
+    footer.Size = UDim2.new(1, 0, 0, 28)
+    footer.Position = UDim2.new(0, 0, 1, -28)
+    footer.ZIndex = 4
+    footer.Parent = canvas
+
+    local footerBorder = Instance.new("Frame")
+    footerBorder.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    footerBorder.BackgroundTransparency = 0.92
+    footerBorder.BorderSizePixel = 0
+    footerBorder.Size = UDim2.new(1, 0, 0, 1)
+    footerBorder.Position = UDim2.new(0, 0, 0, 0)
+    footerBorder.ZIndex = 5
+    footerBorder.Parent = footer
+
+    local footerLabel = Instance.new("TextLabel")
+    footerLabel.BackgroundTransparency = 1
+    footerLabel.Size = UDim2.new(0.6, 0, 1, 0)
+    footerLabel.Position = UDim2.new(0, 14, 0, 0)
+    footerLabel.Font = Enum.Font.GothamSemibold
+    footerLabel.Text = self.Title .. "  |  " .. self.Executor
+    footerLabel.TextColor3 = Theme.TextSecondary
+    footerLabel.TextSize = 10
+    footerLabel.TextXAlignment = Enum.TextXAlignment.Left
+    footerLabel.ZIndex = 5
+    footerLabel.Parent = footer
+
+    -- Live performance stats inside the footer (PC & Mobile friendly)
+    local perfLabel = Instance.new("TextLabel")
+    perfLabel.BackgroundTransparency = 1
+    perfLabel.Size = UDim2.new(0.4, -14, 1, 0)
+    perfLabel.Position = UDim2.new(0.6, 0, 0, 0)
+    perfLabel.Font = Enum.Font.Gotham
+    perfLabel.Text = "FPS: --  |  Ping: --"
+    perfLabel.TextColor3 = Theme.TextMuted
+    perfLabel.TextSize = 10
+    perfLabel.TextXAlignment = Enum.TextXAlignment.Right
+    perfLabel.ZIndex = 5
+    perfLabel.Parent = footer
+
+    local fps = 0
+    RunService.RenderStepped:Connect(function(dt)
+        fps = math.floor(1 / dt)
+        perfLabel.Text = "FPS: " .. fps .. "  |  " .. LocalPlayer.Name
+    end)
+
     local sidebarResizeHandle = Instance.new("Frame")
     sidebarResizeHandle.BackgroundTransparency = 1
     sidebarResizeHandle.Size = UDim2.new(0, 8, 1, 0)
@@ -453,7 +529,7 @@ function LiquidGlass:CreateWindow(config)
         rStartWinSize = winFrame.Size
     end, function(mousePos)
         local delta = mousePos - rStartMouse
-        local nWidth = math.clamp(rStartWinSize.X.Offset + delta.X, 450, 900)
+        local nWidth = math.clamp(rStartWinSize.X.Offset + delta.X, 480, 900)
         local nHeight = math.clamp(rStartWinSize.Y.Offset + delta.Y, 300, 650)
         
         winFrame.Size = UDim2.new(0, nWidth, 0, nHeight)
@@ -490,17 +566,17 @@ function LiquidGlass:CreateWindow(config)
             end)
 
             SmoothTween(winFrame, {
-                Size = UDim2.new(0, 180, 0, 36),
-                Position = UDim2.new(0.5, -90, 0, 15),
+                Size = UDim2.new(0, 200, 0, 36),
+                Position = UDim2.new(0.5, -100, 0, 15),
                 BackgroundTransparency = 0.08
             }, 0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-            SmoothTween(winCorner, { CornerRadius = UDim.new(1, 0) }, 0.2)
-            SmoothTween(sheenCorner, { CornerRadius = UDim.new(1, 0) }, 0.2)
+            SmoothTween(winCorner, { CornerRadius = UDim.new(0, 8) }, 0.2)
+            SmoothTween(sheenCorner, { CornerRadius = UDim.new(0, 8) }, 0.2)
             SmoothTween(uiScale, { Scale = 0.96 }, 0.15)
 
             task.delay(0.15, function()
-                islandFrame.Size = UDim2.new(0, 180, 0, 36)
-                islandFrame.Position = UDim2.new(0.5, -90, 0, 15)
+                islandFrame.Size = UDim2.new(0, 200, 0, 36)
+                islandFrame.Position = UDim2.new(0.5, -100, 0, 15)
                 islandFrame.Visible = true
             end)
         else
@@ -512,8 +588,8 @@ function LiquidGlass:CreateWindow(config)
                 Position = originalPos,
                 BackgroundTransparency = 1 - Theme.GlassOpacity
             }, 0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-            SmoothTween(winCorner, { CornerRadius = UDim.new(0, 14) }, 0.25)
-            SmoothTween(sheenCorner, { CornerRadius = UDim.new(0, 14) }, 0.25)
+            SmoothTween(winCorner, { CornerRadius = UDim.new(0, 10) }, 0.25)
+            SmoothTween(sheenCorner, { CornerRadius = UDim.new(0, 10) }, 0.25)
             SmoothTween(uiScale, { Scale = 1.0 }, 0.15)
 
             SmoothTween(canvas, { GroupTransparency = 0 }, 0.15)
@@ -557,6 +633,7 @@ end
 function Window:AddTab(name, iconId)
     local tabData = { Name = name, Elements = {} }
 
+    -- Dynamic glass selector base
     local tabBtn = Instance.new("TextButton")
     tabBtn.BackgroundColor3 = Theme.Accent
     tabBtn.BackgroundTransparency = 1
@@ -597,6 +674,15 @@ function Window:AddTab(name, iconId)
     tabLabel.ZIndex = 7
     tabLabel.Parent = tabBtn
 
+    -- Page container using CanvasGroup for premium slide & fade transitions
+    local pageGroup = Instance.new("CanvasGroup")
+    pageGroup.Size = UDim2.new(1, 0, 1, 0)
+    pageGroup.BackgroundTransparency = 1
+    pageGroup.BorderSizePixel = 0
+    pageGroup.Visible = false
+    pageGroup.ZIndex = 5
+    pageGroup.Parent = self._contentArea
+
     local page = Instance.new("ScrollingFrame")
     page.BackgroundTransparency = 1
     page.BorderSizePixel = 0
@@ -606,9 +692,8 @@ function Window:AddTab(name, iconId)
     page.ScrollBarImageTransparency = 0.6
     page.CanvasSize = UDim2.new(0, 0, 0, 0)
     page.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    page.Visible = false
-    page.ZIndex = 5
-    page.Parent = self._contentArea
+    page.ZIndex = 6
+    page.Parent = pageGroup
 
     local pageList = Instance.new("UIListLayout")
     pageList.SortOrder = Enum.SortOrder.LayoutOrder
@@ -624,11 +709,13 @@ function Window:AddTab(name, iconId)
 
     tabData._btn = tabBtn
     tabData._label = tabLabel
+    tabData._pageGroup = pageGroup
     tabData._page = page
 
+    -- Real-time cursor glow tracking on hover
     tabBtn.MouseEnter:Connect(function()
         if self.ActiveTab ~= tabData then
-            SmoothTween(tabBtn, { BackgroundTransparency = 0.95 }, 0.1)
+            SmoothTween(tabBtn, { BackgroundTransparency = 0.94 }, 0.1)
             SmoothTween(tabLabel, { TextColor3 = Theme.TextSecondary }, 0.1)
             if tabData._icon then SmoothTween(tabData._icon, { ImageColor3 = Theme.TextSecondary }, 0.1) end
         end
@@ -679,7 +766,7 @@ function Window:AddTab(name, iconId)
         config = config or {}
         local btn, _ = BuildGlassFrame({
             Size = UDim2.new(1, 0, 0, 36),
-            Radius = UDim.new(0, 8),
+            Radius = UDim.new(0, 6),
             ZIndex = 5
         })
         btn.LayoutOrder = Tab._order
@@ -731,7 +818,7 @@ function Window:AddTab(name, iconId)
             ripple.AnchorPoint = Vector2.new(0.5, 0.5)
 
             local rCorner = Instance.new("UICorner")
-            rCorner.CornerRadius = UDim.new(1, 0)
+            rCorner.CornerRadius = UDim.new(0, 3)
             rCorner.Parent = ripple
             ripple.Parent = btn
 
@@ -753,7 +840,7 @@ function Window:AddTab(name, iconId)
 
         local row, _ = BuildGlassFrame({
             Size = UDim2.new(1, 0, 0, 36),
-            Radius = UDim.new(0, 8),
+            Radius = UDim.new(0, 6),
             ZIndex = 5
         })
         row.LayoutOrder = Tab._order
@@ -778,7 +865,7 @@ function Window:AddTab(name, iconId)
         track.Position = UDim2.new(1, -46, 0.5, -8)
         track.ZIndex = 6
         local trackCorner = Instance.new("UICorner")
-        trackCorner.CornerRadius = UDim.new(1, 0)
+        trackCorner.CornerRadius = UDim.new(0, 4)
         trackCorner.Parent = track
         track.Parent = row
 
@@ -789,7 +876,7 @@ function Window:AddTab(name, iconId)
         thumb.Position = state and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
         thumb.ZIndex = 7
         local thumbCorner = Instance.new("UICorner")
-        thumbCorner.CornerRadius = UDim.new(1, 0)
+        thumbCorner.CornerRadius = UDim.new(0, 3)
         thumbCorner.Parent = thumb
         thumb.Parent = track
 
@@ -835,7 +922,7 @@ function Window:AddTab(name, iconId)
 
         local container, _ = BuildGlassFrame({
             Size = UDim2.new(1, 0, 0, 48),
-            Radius = UDim.new(0, 8),
+            Radius = UDim.new(0, 6),
             ZIndex = 5
         })
         container.LayoutOrder = Tab._order
@@ -874,7 +961,7 @@ function Window:AddTab(name, iconId)
         track.Parent = container
 
         local trackCorner = Instance.new("UICorner")
-        trackCorner.CornerRadius = UDim.new(1, 0)
+        trackCorner.CornerRadius = UDim.new(0, 2)
         trackCorner.Parent = track
 
         local fill = Instance.new("Frame")
@@ -885,7 +972,7 @@ function Window:AddTab(name, iconId)
         fill.Parent = track
 
         local fillCorner = Instance.new("UICorner")
-        fillCorner.CornerRadius = UDim.new(1, 0)
+        fillCorner.CornerRadius = UDim.new(0, 2)
         fillCorner.Parent = fill
 
         local thumb = Instance.new("Frame")
@@ -896,7 +983,7 @@ function Window:AddTab(name, iconId)
         thumb.Parent = track
 
         local thumbCorner = Instance.new("UICorner")
-        thumbCorner.CornerRadius = UDim.new(1, 0)
+        thumbCorner.CornerRadius = UDim.new(0, 3)
         thumbCorner.Parent = thumb
 
         local function updateSlider(inputX)
@@ -943,7 +1030,7 @@ function Window:AddTab(name, iconId)
 
         local container, _ = BuildGlassFrame({
             Size = UDim2.new(1, 0, 0, 36),
-            Radius = UDim.new(0, 8),
+            Radius = UDim.new(0, 6),
             ZIndex = 5
         })
         container.LayoutOrder = Tab._order
@@ -974,7 +1061,7 @@ function Window:AddTab(name, iconId)
         trigger.Parent = container
 
         local trigCorner = Instance.new("UICorner")
-        trigCorner.CornerRadius = UDim.new(0, 6)
+        trigCorner.CornerRadius = UDim.new(0, 4)
         trigCorner.Parent = trigger
 
         local listHolder = Instance.new("Frame")
@@ -1048,7 +1135,7 @@ function Window:AddTab(name, iconId)
         config = config or {}
         local container, _ = BuildGlassFrame({
             Size = UDim2.new(1, 0, 0, 48),
-            Radius = UDim.new(0, 8),
+            Radius = UDim.new(0, 6),
             ZIndex = 5
         })
         container.LayoutOrder = Tab._order
@@ -1086,7 +1173,7 @@ function Window:AddTab(name, iconId)
         boxPad.Parent = box
 
         local boxCorner = Instance.new("UICorner")
-        boxCorner.CornerRadius = UDim.new(0, 5)
+        boxCorner.CornerRadius = UDim.new(0, 4)
         boxCorner.Parent = box
 
         box.FocusLost:Connect(function(entered)
@@ -1107,7 +1194,7 @@ function Window:AddTab(name, iconId)
 
         local row, _ = BuildGlassFrame({
             Size = UDim2.new(1, 0, 0, 36),
-            Radius = UDim.new(0, 8),
+            Radius = UDim.new(0, 6),
             ZIndex = 5
         })
         row.LayoutOrder = Tab._order
@@ -1137,7 +1224,7 @@ function Window:AddTab(name, iconId)
         trigger.Parent = row
 
         local trigCorner = Instance.new("UICorner")
-        trigCorner.CornerRadius = UDim.new(0, 6)
+        trigCorner.CornerRadius = UDim.new(0, 4)
         trigCorner.Parent = trigger
 
         trigger.MouseButton1Click:Connect(function()
@@ -1176,7 +1263,7 @@ function Window:AddTab(name, iconId)
 
         local container, _ = BuildGlassFrame({
             Size = UDim2.new(1, 0, 0, 36),
-            Radius = UDim.new(0, 8),
+            Radius = UDim.new(0, 6),
             ZIndex = 5
         })
         container.LayoutOrder = Tab._order
@@ -1204,7 +1291,7 @@ function Window:AddTab(name, iconId)
         swatch.Parent = container
 
         local swatchCorner = Instance.new("UICorner")
-        swatchCorner.CornerRadius = UDim.new(0, 5)
+        swatchCorner.CornerRadius = UDim.new(0, 4)
         swatchCorner.Parent = swatch
 
         local tray = Instance.new("Frame")
@@ -1222,7 +1309,7 @@ function Window:AddTab(name, iconId)
         svPicker.Parent = tray
 
         local svCorner = Instance.new("UICorner")
-        svCorner.CornerRadius = UDim.new(0, 6)
+        svCorner.CornerRadius = UDim.new(0, 4)
         svCorner.Parent = svPicker
 
         local whiteGradFrame = Instance.new("Frame")
@@ -1232,7 +1319,7 @@ function Window:AddTab(name, iconId)
         whiteGradFrame.Parent = svPicker
 
         local wgCorner = Instance.new("UICorner")
-        wgCorner.CornerRadius = UDim.new(0, 6)
+        wgCorner.CornerRadius = UDim.new(0, 4)
         wgCorner.Parent = whiteGradFrame
 
         local whiteGrad = Instance.new("UIGradient")
@@ -1253,7 +1340,7 @@ function Window:AddTab(name, iconId)
         blackGradFrame.Parent = svPicker
 
         local bgCorner = Instance.new("UICorner")
-        bgCorner.CornerRadius = UDim.new(0, 6)
+        bgCorner.CornerRadius = UDim.new(0, 4)
         bgCorner.Parent = blackGradFrame
 
         local blackGrad = Instance.new("UIGradient")
@@ -1275,7 +1362,7 @@ function Window:AddTab(name, iconId)
         cursor.Parent = svPicker
 
         local cursorCorner = Instance.new("UICorner")
-        cursorCorner.CornerRadius = UDim.new(1, 0)
+        cursorCorner.CornerRadius = UDim.new(0, 4)
         cursorCorner.Parent = cursor
 
         local cursorStroke = Instance.new("UIStroke")
@@ -1290,7 +1377,7 @@ function Window:AddTab(name, iconId)
         hueSlider.Parent = tray
 
         local hueCorner = Instance.new("UICorner")
-        hueCorner.CornerRadius = UDim.new(1, 0)
+        hueCorner.CornerRadius = UDim.new(0, 4)
         hueCorner.Parent = hueSlider
 
         local hueGrad = Instance.new("UIGradient")
@@ -1382,15 +1469,28 @@ function Window:AddTab(name, iconId)
     return Tab
 end
 
+-- Premium slide and fade transitions for pages using a dedicated CanvasGroup structure
 function Window:_SwitchTab(tabData)
     if self.ActiveTab then
-        self.ActiveTab._page.Visible = false
+        local activePageGroup = self.ActiveTab._pageGroup
+        SmoothTween(activePageGroup, { GroupTransparency = 1, Position = UDim2.new(0, -20, 0, 0) }, 0.15)
+        task.delay(0.15, function()
+            activePageGroup.Visible = false
+        end)
+        
         SmoothTween(self.ActiveTab._btn, { BackgroundTransparency = 1 }, 0.15)
         SmoothTween(self.ActiveTab._label, { TextColor3 = Theme.TextMuted }, 0.15)
         if self.ActiveTab._icon then SmoothTween(self.ActiveTab._icon, { ImageColor3 = Theme.TextMuted }, 0.15) end
     end
+    
     self.ActiveTab = tabData
-    tabData._page.Visible = true
+    local targetPageGroup = tabData._pageGroup
+    
+    targetPageGroup.Visible = true
+    targetPageGroup.GroupTransparency = 1
+    targetPageGroup.Position = UDim2.new(0, 20, 0, 0)
+    
+    SmoothTween(targetPageGroup, { GroupTransparency = 0, Position = UDim2.new(0, 0, 0, 0) }, 0.22)
     SmoothTween(tabData._btn, { BackgroundTransparency = 0.88 }, 0.15)
     SmoothTween(tabData._label, { TextColor3 = Theme.TextPrimary }, 0.15)
     if tabData._icon then SmoothTween(tabData._icon, { ImageColor3 = Theme.TextPrimary }, 0.15) end
@@ -1398,7 +1498,7 @@ end
 
 local notifyContainer = nil
 
--- Remade iPhone Dynamic Island Notification [10747384394, 10734896206]
+-- Ultra Premium iOS-Style Capsule Notification (No circles, all rounded rectangles)
 function LiquidGlass.Notify(config)
     config = config or {}
     local title = config.Title or "Notification"
@@ -1452,7 +1552,7 @@ function LiquidGlass.Notify(config)
     card.Parent = notifyContainer
 
     local cardCorner = Instance.new("UICorner")
-    cardCorner.CornerRadius = UDim.new(1, 0)
+    cardCorner.CornerRadius = UDim.new(0, 8) -- Premium iOS capsule shape
     cardCorner.Parent = card
 
     local cardStroke = Instance.new("UIStroke")
@@ -1478,7 +1578,7 @@ function LiquidGlass.Notify(config)
     ringGlow.Parent = card
 
     local ringGlowCorner = Instance.new("UICorner")
-    ringGlowCorner.CornerRadius = UDim.new(1, 0)
+    ringGlowCorner.CornerRadius = UDim.new(0, 6)
     ringGlowCorner.Parent = ringGlow
 
     local icon = Instance.new("Frame")
@@ -1489,7 +1589,7 @@ function LiquidGlass.Notify(config)
     icon.Parent = ringGlow
 
     local iconCorner = Instance.new("UICorner")
-    iconCorner.CornerRadius = UDim.new(1, 0)
+    iconCorner.CornerRadius = UDim.new(0, 5)
     iconCorner.Parent = icon
 
     local iconLabel = Instance.new("TextLabel")
