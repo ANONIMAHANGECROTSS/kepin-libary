@@ -153,7 +153,6 @@ local function CreateFloatingDropdown(parentGui, trigger, options, default, useS
 
         closeBtn = Instance.new("TextButton")
         closeBtn.Size = UDim2.new(1, 0, 1, 0)
-        closeBtn.Position = UDim2.new(0, 0, 0, 0)
         closeBtn.BackgroundTransparency = 1
         closeBtn.Text = ""
         closeBtn.ZIndex = 9998
@@ -161,14 +160,12 @@ local function CreateFloatingDropdown(parentGui, trigger, options, default, useS
         closeBtn.MouseButton1Click:Connect(closeDropdown)
 
         floatingFrame = Instance.new("CanvasGroup")
-        -- Diperlebar dari mengikuti tombol menjadi 240px agar teks tidak terpotong
-        floatingFrame.Size = UDim2.new(0, 240, 0, 0)
+        floatingFrame.Size = UDim2.new(0, 260, 0, 0) -- Diperlebar menjadi 260px
         floatingFrame.Position = UDim2.new(0, trigger.AbsolutePosition.X, 0, trigger.AbsolutePosition.Y + trigger.AbsoluteSize.Y + 6)
         floatingFrame.ZIndex = 9999
         floatingFrame.GroupTransparency = 1
         floatingFrame.Parent = parentGui
 
-        -- Tambahkan Shadow pada dropdown untuk efek mengambang
         local dropShadow = Instance.new("ImageLabel")
         dropShadow.BackgroundTransparency = 1
         dropShadow.Size = UDim2.new(1, 30, 1, 30)
@@ -181,7 +178,6 @@ local function CreateFloatingDropdown(parentGui, trigger, options, default, useS
         dropShadow.ZIndex = 9998
         dropShadow.Parent = floatingFrame
 
-        -- Fix Tepi Putih: Menggunakan AddStroke = false
         local listFrame = BuildGlassFrame({
             Size = UDim2.new(1, 0, 1, 0),
             Radius = UDim.new(0, 10),
@@ -194,11 +190,11 @@ local function CreateFloatingDropdown(parentGui, trigger, options, default, useS
         listFrame.Parent = floatingFrame
 
         local searchBox = nil
-        local scrollerY = 6
+        local scrollerY = 8
         if useSearch then
             searchBox = Instance.new("TextBox")
-            searchBox.Size = UDim2.new(1, -12, 0, 32)
-            searchBox.Position = UDim2.new(0, 6, 0, 6)
+            searchBox.Size = UDim2.new(1, -16, 0, 36)
+            searchBox.Position = UDim2.new(0, 8, 0, 8)
             searchBox.BackgroundColor3 = Theme.ElementSurface
             searchBox.BackgroundTransparency = 0.2
             searchBox.FontFace = Theme.FontRegular
@@ -207,6 +203,7 @@ local function CreateFloatingDropdown(parentGui, trigger, options, default, useS
             searchBox.TextColor3 = Theme.TextPrimary
             searchBox.TextSize = 13
             searchBox.Text = ""
+            searchBox.TextStrokeTransparency = 1 -- No outline
             searchBox.Parent = listFrame
             Instance.new("UICorner", searchBox).CornerRadius = UDim.new(0, 6)
             
@@ -216,16 +213,16 @@ local function CreateFloatingDropdown(parentGui, trigger, options, default, useS
             ss.Thickness = 1
 
             local sp = Instance.new("UIPadding", searchBox)
-            sp.PaddingLeft = UDim.new(0, 8)
-            sp.PaddingRight = UDim.new(0, 8)
-            scrollerY = 44
+            sp.PaddingLeft = UDim.new(0, 12) -- Spacing sempurna
+            sp.PaddingRight = UDim.new(0, 12)
+            scrollerY = 52
         end
 
         local scroller = Instance.new("ScrollingFrame")
         scroller.BackgroundTransparency = 1
-        scroller.Size = UDim2.new(1, 0, 1, -scrollerY - 6)
+        scroller.Size = UDim2.new(1, 0, 1, -scrollerY - 8)
         scroller.Position = UDim2.new(0, 0, 0, scrollerY)
-        scroller.ScrollBarThickness = 3
+        scroller.ScrollBarThickness = 4
         scroller.ScrollBarImageColor3 = Theme.Accent
         scroller.CanvasSize = UDim2.new(0, 0, 0, 0)
         scroller.AutomaticCanvasSize = Enum.AutomaticSize.Y
@@ -233,17 +230,17 @@ local function CreateFloatingDropdown(parentGui, trigger, options, default, useS
 
         local layout = Instance.new("UIListLayout", scroller)
         layout.SortOrder = Enum.SortOrder.LayoutOrder
-        layout.Padding = UDim.new(0, 2)
+        layout.Padding = UDim.new(0, 4)
 
         local pad = Instance.new("UIPadding", scroller)
-        pad.PaddingLeft = UDim.new(0, 6)
-        pad.PaddingRight = UDim.new(0, 6)
-        pad.PaddingBottom = UDim.new(0, 6)
+        pad.PaddingLeft = UDim.new(0, 8)
+        pad.PaddingRight = UDim.new(0, 8)
+        pad.PaddingBottom = UDim.new(0, 8)
 
         local hoverInd = Instance.new("Frame")
         hoverInd.BackgroundColor3 = Theme.Accent
         hoverInd.BackgroundTransparency = 0.8
-        hoverInd.Size = UDim2.new(1, -12, 0, 30)
+        hoverInd.Size = UDim2.new(1, -16, 0, 34)
         hoverInd.ZIndex = 10000
         hoverInd.Visible = false
         Instance.new("UICorner", hoverInd).CornerRadius = UDim.new(0, 6)
@@ -261,18 +258,19 @@ local function CreateFloatingDropdown(parentGui, trigger, options, default, useS
                     local optBtn = Instance.new("TextButton")
                     optBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                     optBtn.BackgroundTransparency = 1
-                    optBtn.Size = UDim2.new(1, 0, 0, 30)
+                    optBtn.Size = UDim2.new(1, 0, 0, 34)
                     optBtn.FontFace = Theme.FontRegular
                     optBtn.Text = value
-                    optBtn.TextColor3 = (value == selected) and Theme.Accent or Theme.TextSecondary
+                    optBtn.TextColor3 = (value == selected) and Theme.TextPrimary or Theme.TextSecondary
                     optBtn.TextSize = 13
                     optBtn.TextXAlignment = Enum.TextXAlignment.Left
+                    optBtn.TextStrokeTransparency = 1 -- No outline
                     optBtn.ZIndex = 10001
                     optBtn.Parent = scroller
 
                     optBtn.MouseEnter:Connect(function()
                         hoverInd.Visible = true
-                        SmoothTween(hoverInd, {Position = UDim2.new(0, 0, 0, (count-1)*32), BackgroundTransparency = 0.7}, 0.15)
+                        SmoothTween(hoverInd, {Position = UDim2.new(0, 0, 0, (count-1)*38), BackgroundTransparency = 0.7}, 0.15)
                     end)
                     optBtn.MouseLeave:Connect(function()
                         SmoothTween(hoverInd, {BackgroundTransparency = 0.8}, 0.15)
@@ -287,10 +285,10 @@ local function CreateFloatingDropdown(parentGui, trigger, options, default, useS
                 end
             end
             
-            local searchH = useSearch and 44 or 0
-            local listH = (count * 32) + scrollerY + 6
-            local targetHeight = math.clamp(listH, 0, 260)
-            SmoothTween(floatingFrame, {Size = UDim2.new(0, 240, 0, targetHeight)}, 0.3, Enum.EasingStyle.Quint)
+            local searchH = useSearch and 52 or 0
+            local listH = (count * 34) + ((count - 1) * 4) + scrollerY + 16
+            local targetHeight = math.clamp(listH, 0, 280)
+            SmoothTween(floatingFrame, {Size = UDim2.new(0, 260, 0, targetHeight)}, 0.3, Enum.EasingStyle.Quint)
         end
 
         if searchBox then
@@ -343,7 +341,7 @@ function LiquidGlass:CreateWindow(config)
     self.Executor = GetExecutorName()
 
     local gui = Instance.new("ScreenGui")
-    gui.Name = "LiquidGlassV11_Ultra"
+    gui.Name = "LiquidGlassV12_Ultra"
     gui.ResetOnSpawn = false
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     gui.IgnoreGuiInset = true
@@ -879,13 +877,14 @@ function Window:AddTab(name, iconId)
         local mainGui = tabData._gui
 
         local groupFrame = BuildGlassFrame({
-            Size = UDim2.new(1, 0, 0, 48),
+            Size = UDim2.new(1, 0, 0, 0), -- Y diatur 0 agar AutomaticSize berfungsi
             Radius = UDim.new(0, 10),
             Color = Theme.GlassSurface,
             Transparency = 0.0,
             ClipsDescendants = true,
             ZIndex = 5
         })
+        groupFrame.AutomaticSize = Enum.AutomaticSize.Y
         groupFrame.LayoutOrder = Tab._order
         Tab._order = Tab._order + 1
         groupFrame.Parent = activeColumn
@@ -952,7 +951,8 @@ function Window:AddTab(name, iconId)
         local gBody = Instance.new("Frame")
         gBody.BackgroundTransparency = 1
         gBody.Position = UDim2.new(0, 0, 0, 48)
-        gBody.Size = UDim2.new(1, 0, 1, -48)
+        gBody.Size = UDim2.new(1, 0, 0, 0)
+        gBody.AutomaticSize = Enum.AutomaticSize.Y
         gBody.ZIndex = 6
         gBody.Parent = groupFrame
 
@@ -968,18 +968,7 @@ function Window:AddTab(name, iconId)
         gBodyPad.PaddingBottom = UDim.new(0, 12)
         gBodyPad.Parent = gBody
 
-        local elementsCount = 0
         local isCollapsed = false
-
-        local function updateGroupHeight()
-            local baseHeight = 48
-            local bodyHeight = (elementsCount * 44) + ((elementsCount - 1) * 10) + 24
-            if isCollapsed or elementsCount == 0 then
-                SmoothTween(groupFrame, { Size = UDim2.new(1, 0, 0, baseHeight) }, 0.3, Enum.EasingStyle.Quint)
-            else
-                SmoothTween(groupFrame, { Size = UDim2.new(1, 0, 0, baseHeight + bodyHeight) }, 0.3, Enum.EasingStyle.Quint)
-            end
-        end
 
         colBtn.MouseButton1Click:Connect(function()
             isCollapsed = not isCollapsed
@@ -990,7 +979,6 @@ function Window:AddTab(name, iconId)
                 gBody.Visible = true
                 SmoothTween(colBtn, { Rotation = 0 }, 0.3, Theme.TweenStyle)
             end
-            updateGroupHeight()
         end)
 
         local Group = {}
@@ -998,7 +986,6 @@ function Window:AddTab(name, iconId)
 
         function Group:AddButton(btnConfig)
             btnConfig = btnConfig or {}
-            elementsCount = elementsCount + 1
             local btn = BuildGlassFrame({
                 Size = UDim2.new(1, 0, 0, 44),
                 Radius = UDim.new(0, 8),
@@ -1048,14 +1035,12 @@ function Window:AddTab(name, iconId)
             end)
 
             btn.Parent = gBody
-            updateGroupHeight()
             return btn
         end
 
         function Group:AddToggle(togConfig)
             togConfig = togConfig or {}
             local state = togConfig.Default or false
-            elementsCount = elementsCount + 1
 
             local row = BuildGlassFrame({
                 Size = UDim2.new(1, 0, 0, 44),
@@ -1126,7 +1111,6 @@ function Window:AddTab(name, iconId)
             end)
 
             row.Parent = gBody
-            updateGroupHeight()
             return {
                 Set = function(_, val)
                     state = val
@@ -1143,7 +1127,6 @@ function Window:AddTab(name, iconId)
             local max = slidConfig.Max or 100
             local value = slidConfig.Value or min
             local suffix = slidConfig.Suffix or ""
-            elementsCount = elementsCount + 1
 
             local container = BuildGlassFrame({
                 Size = UDim2.new(1, 0, 0, 44),
@@ -1236,7 +1219,6 @@ function Window:AddTab(name, iconId)
             SetupUnifiedDrag(thumb, function(pos) showTooltip() updateSlider(pos.X) end, function(pos) updateSlider(pos.X) end, function() hideTooltip() end)
 
             container.Parent = gBody
-            updateGroupHeight()
             return {
                 Set = function(_, val)
                     val = math.clamp(val, min, max)
@@ -1256,7 +1238,6 @@ function Window:AddTab(name, iconId)
             local options = dropConfig.Options or {}
             local selected = dropConfig.Default or (options[1] or "Select...")
             local useSearch = #options > 5
-            elementsCount = elementsCount + 1
 
             local container = BuildGlassFrame({
                 Size = UDim2.new(1, 0, 0, 44),
@@ -1301,13 +1282,11 @@ function Window:AddTab(name, iconId)
             local ddObj = CreateFloatingDropdown(mainGui, trigger, options, selected, useSearch, dropConfig.Callback)
 
             container.Parent = gBody
-            updateGroupHeight()
             return ddObj
         end
 
         function Group:AddInput(inpConfig)
             inpConfig = inpConfig or {}
-            elementsCount = elementsCount + 1
             local container = BuildGlassFrame({
                 Size = UDim2.new(1, 0, 0, 44),
                 Radius = UDim.new(0, 8),
@@ -1354,7 +1333,6 @@ function Window:AddTab(name, iconId)
             end)
 
             container.Parent = gBody
-            updateGroupHeight()
             return {
                 Get = function() return box.Text end,
                 Set = function(_, txt) box.Text = txt end
@@ -1365,7 +1343,6 @@ function Window:AddTab(name, iconId)
             kbConfig = kbConfig or {}
             local key = kbConfig.Default or Enum.KeyCode.Unknown
             local listening = false
-            elementsCount = elementsCount + 1
 
             local row = BuildGlassFrame({
                 Size = UDim2.new(1, 0, 0, 44),
@@ -1425,7 +1402,6 @@ function Window:AddTab(name, iconId)
             end)
 
             row.Parent = gBody
-            updateGroupHeight()
             return { Get = function() return key end }
         end
 
@@ -1433,7 +1409,6 @@ function Window:AddTab(name, iconId)
             cpConfig = cpConfig or {}
             local color = cpConfig.Default or Color3.fromRGB(120, 180, 255)
             local isOpen = false
-            elementsCount = elementsCount + 1
 
             local container = BuildGlassFrame({
                 Size = UDim2.new(1, 0, 0, 44),
@@ -1649,7 +1624,6 @@ function Window:AddTab(name, iconId)
             end)
 
             container.Parent = gBody
-            updateGroupHeight()
             return {
                 Get = function() return color end,
                 Set = function(_, col)
