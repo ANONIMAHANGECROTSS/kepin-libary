@@ -144,7 +144,7 @@ function LiquidGlass:CreateWindow(config)
     self.Executor = GetExecutorName()
 
     local gui = Instance.new("ScreenGui")
-    gui.Name = "LiquidGlassV7"
+    gui.Name = "LiquidGlassV7_5"
     gui.ResetOnSpawn = false
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     gui.IgnoreGuiInset = true
@@ -715,7 +715,6 @@ function Window:AddTab(name, iconId)
     page.ZIndex = 6
     page.Parent = pageGlass
 
-    -- Dynamic Dual-Column responsive structure to house modular groups
     local leftCol = Instance.new("Frame")
     leftCol.Name = "LeftColumn"
     leftCol.BackgroundTransparency = 1
@@ -734,7 +733,7 @@ function Window:AddTab(name, iconId)
     rightCol.Size = UDim2.new(0.5, -4, 1, 0)
     rightCol.Position = UDim2.new(0.5, 4, 0, 0)
     rightCol.ZIndex = 6
-    rightCol.Parent = page
+    rightCol.Parent = rightCol
 
     local rightColLayout = Instance.new("UIListLayout")
     rightColLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -806,10 +805,11 @@ function Window:AddTab(name, iconId)
         Tab._order = Tab._order + 1
         groupFrame.Parent = activeColumn
 
-        -- Smooth Group Header colored with accent gradients
+        -- Highly Integrated Glass Header (Not solid gradient) [10723415903]
         local gHeader = Instance.new("Frame")
-        gHeader.Size = UDim2.new(1, 0, 0, 30)
-        gHeader.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        gHeader.Size = UDim2.new(1, 0, 0, 32)
+        gHeader.BackgroundColor3 = Theme.GlassSurface
+        gHeader.BackgroundTransparency = 0.90 -- Clean, translucent backing
         gHeader.BorderSizePixel = 0
         gHeader.ZIndex = 6
         gHeader.Parent = groupFrame
@@ -818,21 +818,37 @@ function Window:AddTab(name, iconId)
         ghCorner.CornerRadius = UDim.new(0, 8)
         ghCorner.Parent = gHeader
 
-        local ghGrad = Instance.new("UIGradient")
-        ghGrad.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, Theme.Accent),
-            ColorSequenceKeypoint.new(1, Theme.AccentGlow)
-        })
-        ghGrad.Parent = gHeader
+        -- 1px Specular bottom divider line
+        local divider = Instance.new("Frame")
+        divider.Size = UDim2.new(1, 0, 0, 1)
+        divider.Position = UDim2.new(0, 0, 1, -1)
+        divider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        divider.BackgroundTransparency = 0.92
+        divider.BorderSizePixel = 0
+        divider.ZIndex = 7
+        divider.Parent = gHeader
+
+        -- Left Vertical Specular Accent Pin
+        local pin = Instance.new("Frame")
+        pin.BackgroundColor3 = Theme.Accent
+        pin.Size = UDim2.new(0, 3, 0, 14)
+        pin.Position = UDim2.new(0, 8, 0.5, -7)
+        pin.BorderSizePixel = 0
+        pin.ZIndex = 7
+        pin.Parent = gHeader
+
+        local pinCorner = Instance.new("UICorner")
+        pinCorner.CornerRadius = UDim.new(0, 2)
+        pinCorner.Parent = pin
 
         local gTitle = Instance.new("TextLabel")
         gTitle.BackgroundTransparency = 1
-        gTitle.Size = UDim2.new(1, -38, 1, 0)
-        gTitle.Position = UDim2.new(0, 10, 0, 0)
+        gTitle.Size = UDim2.new(1, -48, 1, 0)
+        gTitle.Position = UDim2.new(0, 18, 0, 0)
         gTitle.Font = Enum.Font.GothamBold
         gTitle.Text = title:upper()
         gTitle.TextColor3 = Theme.TextPrimary
-        gTitle.TextSize = 10
+        gTitle.TextSize = 9.5
         gTitle.TextXAlignment = Enum.TextXAlignment.Left
         gTitle.ZIndex = 7
         gTitle.Parent = gHeader
@@ -841,29 +857,30 @@ function Window:AddTab(name, iconId)
         colBtn.BackgroundTransparency = 1
         colBtn.Size = UDim2.new(0, 14, 0, 14)
         colBtn.Position = UDim2.new(1, -24, 0.5, -7)
-        colBtn.Image = "rbxassetid://10734896206" -- Chevron or expand icon
-        colBtn.ImageColor3 = Theme.TextPrimary
+        colBtn.Image = "rbxassetid://10723415903" -- Down arrow/chevron
+        colBtn.ImageColor3 = Theme.TextSecondary
         colBtn.ZIndex = 7
         colBtn.Parent = gHeader
 
+        -- Restructured Body Container with corrected spacing
         local gBody = Instance.new("Frame")
         gBody.BackgroundTransparency = 1
-        gBody.Position = UDim2.new(0, 0, 0, 30)
-        gBody.Size = UDim2.new(1, 0, 1, -30)
+        gBody.Position = UDim2.new(0, 0, 0, 32)
+        gBody.Size = UDim2.new(1, 0, 1, -32)
         gBody.AutomaticSize = Enum.AutomaticSize.Y
         gBody.ZIndex = 6
         gBody.Parent = groupFrame
 
         local gBodyLayout = Instance.new("UIListLayout")
         gBodyLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        gBodyLayout.Padding = UDim.new(0, 5)
+        gBodyLayout.Padding = UDim.new(0, 6)
         gBodyLayout.Parent = gBody
 
         local gBodyPad = Instance.new("UIPadding")
-        gBodyPad.PaddingLeft = UDim.new(0, 6)
-        gBodyPad.PaddingRight = UDim.new(0, 6)
-        gBodyPad.PaddingTop = UDim.new(0, 6)
-        gBodyPad.PaddingBottom = UDim.new(0, 6)
+        gBodyPad.PaddingLeft = UDim.new(0, 10)
+        gBodyPad.PaddingRight = UDim.new(0, 10)
+        gBodyPad.PaddingTop = UDim.new(0, 12) -- Space between header and first widget
+        gBodyPad.PaddingBottom = UDim.new(0, 10)
         gBodyPad.Parent = gBody
 
         local isCollapsed = false
@@ -871,7 +888,7 @@ function Window:AddTab(name, iconId)
             isCollapsed = not isCollapsed
             if isCollapsed then
                 SmoothTween(colBtn, { Rotation = 180 }, 0.22, Theme.TweenStyle)
-                SmoothTween(groupFrame, { Size = UDim2.new(1, 0, 0, 30) }, 0.22, Theme.TweenStyle)
+                SmoothTween(groupFrame, { Size = UDim2.new(1, 0, 0, 32) }, 0.22, Theme.TweenStyle)
                 gBody.Visible = false
             else
                 SmoothTween(colBtn, { Rotation = 0 }, 0.22, Theme.TweenStyle)
@@ -880,7 +897,6 @@ function Window:AddTab(name, iconId)
             end
         end)
 
-        -- Exposed nested constructors within Group objects
         local Group = {}
         Group._order = 0
 
@@ -925,7 +941,7 @@ function Window:AddTab(name, iconId)
         end
 
         function Group:AddToggle(togConfig)
-            togConfig = TogConfig or {}
+            togConfig = togConfig or {}
             local state = togConfig.Default or false
 
             local row, _ = BuildGlassFrame({
@@ -1110,8 +1126,8 @@ function Window:AddTab(name, iconId)
                 Radius = UDim.new(0, 6),
                 ZIndex = 7
             })
-            container.LayoutOrder = Group._order
-            Group._order = Group._order + 1
+            container.LayoutOrder = Tab._order
+            Tab._order = Tab._order + 1
 
             local label = Instance.new("TextLabel")
             label.BackgroundTransparency = 1
