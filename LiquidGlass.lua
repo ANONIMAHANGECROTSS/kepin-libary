@@ -144,7 +144,7 @@ function LiquidGlass:CreateWindow(config)
     self.Executor = GetExecutorName()
 
     local gui = Instance.new("ScreenGui")
-    gui.Name = "LiquidGlassV7_5"
+    gui.Name = "LiquidGlassV7_8"
     gui.ResetOnSpawn = false
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     gui.IgnoreGuiInset = true
@@ -317,7 +317,7 @@ function LiquidGlass:CreateWindow(config)
     vtCorner.CornerRadius = UDim.new(0, 4)
     vtCorner.Parent = versionTag
 
-    -- Redesigned, larger Control Buttons (24x24 px)
+    -- Translucent Glass Action Controls on Header Right (Minimize, Close) (24x24 px)
     local controls = Instance.new("Frame")
     controls.BackgroundTransparency = 1
     controls.Size = UDim2.new(0, 72, 1, 0)
@@ -715,10 +715,12 @@ function Window:AddTab(name, iconId)
     page.ZIndex = 6
     page.Parent = pageGlass
 
+    -- Dynamic Dual-Column responsive structure
     local leftCol = Instance.new("Frame")
     leftCol.Name = "LeftColumn"
     leftCol.BackgroundTransparency = 1
-    leftCol.Size = UDim2.new(0.5, -4, 1, 0)
+    leftCol.Size = UDim2.new(0.5, -4, 0, 0)
+    leftCol.AutomaticSize = Enum.AutomaticSize.Y
     leftCol.ZIndex = 6
     leftCol.Parent = page
 
@@ -730,10 +732,10 @@ function Window:AddTab(name, iconId)
     local rightCol = Instance.new("Frame")
     rightCol.Name = "RightColumn"
     rightCol.BackgroundTransparency = 1
-    rightCol.Size = UDim2.new(0.5, -4, 1, 0)
-    rightCol.Position = UDim2.new(0.5, 4, 0, 0)
+    rightCol.Size = UDim2.new(0.5, -4, 0, 0)
+    rightCol.AutomaticSize = Enum.AutomaticSize.Y
     rightCol.ZIndex = 6
-    rightCol.Parent = rightCol
+    rightCol.Parent = page -- FIXED parent cyclic references bug
 
     local rightColLayout = Instance.new("UIListLayout")
     rightColLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -795,7 +797,7 @@ function Window:AddTab(name, iconId)
         local activeColumn = (tabData._groupCount % 2 == 1) and tabData._leftCol or tabData._rightCol
 
         local groupFrame, groupStroke, groupCorner = BuildGlassFrame({
-            Size = UDim2.new(1, 0, 0, 36), -- Compact height when minimized
+            Size = UDim2.new(1, 0, 0, 32), -- Compact height when minimized
             Radius = UDim.new(0, 8),
             ZIndex = 5
         })
@@ -805,7 +807,7 @@ function Window:AddTab(name, iconId)
         Tab._order = Tab._order + 1
         groupFrame.Parent = activeColumn
 
-        -- Highly Integrated Glass Header (Not solid gradient) [10723415903]
+        -- Highly Integrated Glass Header (Not solid gradient)
         local gHeader = Instance.new("Frame")
         gHeader.Size = UDim2.new(1, 0, 0, 32)
         gHeader.BackgroundColor3 = Theme.GlassSurface
