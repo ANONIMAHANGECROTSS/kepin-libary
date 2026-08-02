@@ -11,22 +11,22 @@ local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
 local Theme = {
-    GlassBackground = Color3.fromRGB(12, 12, 18),
-    GlassSurface = Color3.fromRGB(24, 25, 35),
+    GlassBackground = Color3.fromRGB(10, 11, 16),
+    GlassSurface = Color3.fromRGB(18, 20, 29),
     GlassBorder = Color3.fromRGB(255, 255, 255),
     Accent = Color3.fromRGB(120, 180, 255),
     AccentGlow = Color3.fromRGB(80, 140, 255),
     AccentDark = Color3.fromRGB(40, 100, 220),
     TextPrimary = Color3.fromRGB(255, 255, 255),
-    TextSecondary = Color3.fromRGB(180, 190, 210),
-    TextMuted = Color3.fromRGB(110, 120, 140),
-    Success = Color3.fromRGB(100, 220, 160),
-    Warning = Color3.fromRGB(255, 190, 80),
-    Danger = Color3.fromRGB(255, 90, 100),
-    GlassOpacity = 0.15,
-    BorderOpacity = 0.18,
-    ShadowOpacity = 0.65,
-    TweenSpeed = 0.25,
+    TextSecondary = Color3.fromRGB(185, 195, 215),
+    TextMuted = Color3.fromRGB(115, 125, 145),
+    Success = Color3.fromRGB(100, 225, 160),
+    Warning = Color3.fromRGB(255, 195, 85),
+    Danger = Color3.fromRGB(255, 95, 105),
+    GlassOpacity = 0.22,
+    BorderOpacity = 0.22,
+    ShadowOpacity = 0.60,
+    TweenSpeed = 0.28,
     TweenStyle = Enum.EasingStyle.Quint,
     TweenDirection = Enum.EasingDirection.Out
 }
@@ -42,7 +42,6 @@ local function SmoothTween(obj, props, duration, style, dir)
     return tween
 end
 
--- Unified drag system for PC and Mobile touch inputs
 local function SetupUnifiedDrag(triggerFrame, onDragStart, onDragMove, onDragEnd)
     local dragging = false
     local dragConnection = nil
@@ -96,7 +95,7 @@ local function BuildGlassFrame(props)
     local gradient = Instance.new("UIGradient")
     gradient.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 150, 150))
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(130, 130, 130))
     })
     gradient.Rotation = 45
     gradient.Parent = stroke
@@ -118,9 +117,10 @@ function LiquidGlass:CreateWindow(config)
     self.SidebarWidth = 150
     self.Tabs = {}
     self.ActiveTab = nil
+    self._minimized = false
 
     local gui = Instance.new("ScreenGui")
-    gui.Name = "LiquidGlassV2"
+    gui.Name = "LiquidGlassV3"
     gui.ResetOnSpawn = false
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     gui.IgnoreGuiInset = true
@@ -128,25 +128,11 @@ function LiquidGlass:CreateWindow(config)
     if not gui.Parent then gui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
     self._gui = gui
 
-    local shadowFrame = Instance.new("Frame")
-    shadowFrame.Name = "Shadow"
-    shadowFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    shadowFrame.BackgroundTransparency = 0.55
-    shadowFrame.BorderSizePixel = 0
-    shadowFrame.Size = UDim2.new(0, self.Width + 30, 0, self.Height + 30)
-    shadowFrame.Position = UDim2.new(0.5, -(self.Width/2) - 15, 0.5, -(self.Height/2) - 15)
-    shadowFrame.ZIndex = 1
-    shadowFrame.Parent = gui
-
-    local shadowCorner = Instance.new("UICorner")
-    shadowCorner.CornerRadius = UDim.new(0, 18)
-    shadowCorner.Parent = shadowFrame
-
     local winFrame, winStroke, winCorner = BuildGlassFrame({
         Size = UDim2.new(0, self.Width, 0, self.Height),
         Position = UDim2.new(0.5, -self.Width/2, 0.5, -self.Height/2),
         Radius = UDim.new(0, 14),
-        ClipsDescendants = true,
+        ClipsDescendants = false,
         ZIndex = 2
     })
     winFrame.Parent = gui
@@ -154,16 +140,46 @@ function LiquidGlass:CreateWindow(config)
 
     local mainGradient = Instance.new("UIGradient")
     mainGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(16, 17, 24)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(8, 8, 12))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 22, 32)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 11, 16))
     })
     mainGradient.Rotation = 135
     mainGradient.Parent = winFrame
 
+    -- Anchored shadow directly parented to the main frame to prevent resizing desync
+    local shadow = Instance.new("ImageLabel")
+    shadow.Name = "AnchoredShadow"
+    shadow.BackgroundTransparency = 1
+    shadow.Size = UDim2.new(1, 38, 1, 38)
+    shadow.Position = UDim2.new(0, -19, 0, -19)
+    shadow.Image = "rbxassetid://6015897843"
+    shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+    shadow.ImageTransparency = 1 - Theme.ShadowOpacity
+    shadow.ScaleType = Enum.ScaleType.Slice
+    shadow.SliceCenter = Rect.new(47, 47, 450, 450)
+    shadow.ZIndex = winFrame.ZIndex - 1
+    shadow.Parent = winFrame
+    self._shadow = shadow
+
+    -- Glass specular gloss overlay
+    local sheen = Instance.new("ImageLabel")
+    sheen.Name = "Sheen"
+    sheen.BackgroundTransparency = 1
+    sheen.Size = UDim2.new(1, 0, 1, 0)
+    sheen.Image = "rbxassetid://15623104935"
+    sheen.ImageColor3 = Color3.fromRGB(255, 255, 255)
+    sheen.ImageTransparency = 0.94
+    sheen.ZIndex = winFrame.ZIndex + 5
+    sheen.Parent = winFrame
+
+    local sheenCorner = Instance.new("UICorner")
+    sheenCorner.CornerRadius = UDim.new(0, 14)
+    sheenCorner.Parent = sheen
+
     local islandFrame = Instance.new("TextButton")
     islandFrame.Name = "DynamicIsland"
-    islandFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
-    islandFrame.BackgroundTransparency = 0.1
+    islandFrame.BackgroundColor3 = Color3.fromRGB(10, 11, 16)
+    islandFrame.BackgroundTransparency = 0.08
     islandFrame.BorderSizePixel = 0
     islandFrame.Size = UDim2.new(0, 180, 0, 36)
     islandFrame.Position = UDim2.new(0.5, -90, 0, -50)
@@ -178,7 +194,7 @@ function LiquidGlass:CreateWindow(config)
 
     local islandStroke = Instance.new("UIStroke")
     islandStroke.Color = Theme.Accent
-    islandStroke.Transparency = 0.6
+    islandStroke.Transparency = 0.5
     islandStroke.Thickness = 1
     islandStroke.Parent = islandFrame
 
@@ -224,7 +240,7 @@ function LiquidGlass:CreateWindow(config)
 
     local headerBorder = Instance.new("Frame")
     headerBorder.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    headerBorder.BackgroundTransparency = 0.9
+    headerBorder.BackgroundTransparency = 0.92
     headerBorder.BorderSizePixel = 0
     headerBorder.Size = UDim2.new(1, 0, 0, 1)
     headerBorder.Position = UDim2.new(0, 0, 1, -1)
@@ -295,7 +311,6 @@ function LiquidGlass:CreateWindow(config)
     minCorner.CornerRadius = UDim.new(1, 0)
     minCorner.Parent = minBtn
 
-    -- Header Drag Support (PC & Mobile)
     local dragStart, startPos
     SetupUnifiedDrag(header, function(mousePos)
         dragStart = mousePos
@@ -327,7 +342,7 @@ function LiquidGlass:CreateWindow(config)
 
     local sidebarBorder = Instance.new("Frame")
     sidebarBorder.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    sidebarBorder.BackgroundTransparency = 0.9
+    sidebarBorder.BackgroundTransparency = 0.91
     sidebarBorder.BorderSizePixel = 0
     sidebarBorder.Size = UDim2.new(0, 1, 1, 0)
     sidebarBorder.Position = UDim2.new(1, -1, 0, 0)
@@ -363,7 +378,6 @@ function LiquidGlass:CreateWindow(config)
     contentArea.Parent = workspaceFrame
     self._contentArea = contentArea
 
-    -- Interactive resizer bars (Touch and Mouse compatible)
     local sidebarResizeHandle = Instance.new("Frame")
     sidebarResizeHandle.BackgroundTransparency = 1
     sidebarResizeHandle.Size = UDim2.new(0, 8, 1, 0)
@@ -380,20 +394,16 @@ function LiquidGlass:CreateWindow(config)
     sizeGrabber.ZIndex = 10
     sizeGrabber.Parent = winFrame
 
-    local rStartMouse, rStartWinSize, rStartShadowSize
+    local rStartMouse, rStartWinSize
     SetupUnifiedDrag(sizeGrabber, function(mousePos)
         rStartMouse = mousePos
         rStartWinSize = winFrame.Size
-        rStartShadowSize = shadowFrame.Size
     end, function(mousePos)
         local delta = mousePos - rStartMouse
         local nWidth = math.clamp(rStartWinSize.X.Offset + delta.X, 450, 900)
         local nHeight = math.clamp(rStartWinSize.Y.Offset + delta.Y, 300, 650)
         
         winFrame.Size = UDim2.new(0, nWidth, 0, nHeight)
-        shadowFrame.Size = UDim2.new(0, nWidth + 30, 0, nHeight + 30)
-        shadowFrame.Position = UDim2.new(0.5, -(nWidth/2) - 15, 0.5, -(nHeight/2) - 15)
-        
         contentArea.Size = UDim2.new(1, -self.SidebarWidth, 1, 0)
     end)
 
@@ -420,10 +430,9 @@ function LiquidGlass:CreateWindow(config)
             originalPos = winFrame.Position
 
             SmoothTween(canvas, { GroupTransparency = 1 }, 0.15)
-            SmoothTween(shadowFrame, { BackgroundTransparency = 1 }, 0.15)
+            SmoothTween(shadow, { ImageTransparency = 1 }, 0.15)
             task.delay(0.15, function()
                 canvas.Visible = false
-                shadowFrame.Visible = false
             end)
 
             SmoothTween(winFrame, {
@@ -432,6 +441,7 @@ function LiquidGlass:CreateWindow(config)
                 BackgroundTransparency = 0.08
             }, 0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
             SmoothTween(winCorner, { CornerRadius = UDim.new(1, 0) }, 0.35)
+            SmoothTween(sheenCorner, { CornerRadius = UDim.new(1, 0) }, 0.35)
 
             task.delay(0.2, function()
                 islandFrame.Size = UDim2.new(0, 180, 0, 36)
@@ -441,7 +451,6 @@ function LiquidGlass:CreateWindow(config)
         else
             islandFrame.Visible = false
             canvas.Visible = true
-            shadowFrame.Visible = true
 
             SmoothTween(winFrame, {
                 Size = originalSize,
@@ -449,9 +458,10 @@ function LiquidGlass:CreateWindow(config)
                 BackgroundTransparency = 1 - Theme.GlassOpacity
             }, 0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
             SmoothTween(winCorner, { CornerRadius = UDim.new(0, 14) }, 0.35)
+            SmoothTween(sheenCorner, { CornerRadius = UDim.new(0, 14) }, 0.35)
 
             SmoothTween(canvas, { GroupTransparency = 0 }, 0.3)
-            SmoothTween(shadowFrame, { BackgroundTransparency = 0.55 }, 0.3)
+            SmoothTween(shadow, { ImageTransparency = 1 - Theme.ShadowOpacity }, 0.3)
         end
     end
 
@@ -466,14 +476,14 @@ function LiquidGlass:CreateWindow(config)
     winFrame.Size = UDim2.new(0, self.Width, 0, 0)
     winFrame.BackgroundTransparency = 1
     canvas.GroupTransparency = 1
-    shadowFrame.BackgroundTransparency = 1
+    shadow.ImageTransparency = 1
 
     SmoothTween(winFrame, {
         Size = UDim2.new(0, self.Width, 0, self.Height),
         BackgroundTransparency = 1 - Theme.GlassOpacity
     }, 0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
     SmoothTween(canvas, { GroupTransparency = 0 }, 0.45)
-    SmoothTween(shadowFrame, { BackgroundTransparency = 0.55 }, 0.45)
+    SmoothTween(shadow, { ImageTransparency = 1 - Theme.ShadowOpacity }, 0.45)
 
     self._tabScroller = tabScroller
     return self
@@ -841,7 +851,6 @@ function Window:AddTab(name, iconId)
         local selected = config.Default or (options[1] or "Select...")
         local isOpen = false
 
-        -- Layout integration (extends height inline dynamically)
         local container, _ = BuildGlassFrame({
             Size = UDim2.new(1, 0, 0, 36),
             Radius = UDim.new(0, 8),
@@ -1108,7 +1117,6 @@ function Window:AddTab(name, iconId)
         swatchCorner.CornerRadius = UDim.new(0, 5)
         swatchCorner.Parent = swatch
 
-        -- Expanding paint picker tray
         local tray = Instance.new("Frame")
         tray.BackgroundTransparency = 1
         tray.Position = UDim2.new(0, 0, 0, 36)
@@ -1117,35 +1125,67 @@ function Window:AddTab(name, iconId)
         tray.ZIndex = 6
         tray.Parent = container
 
-        -- Color wheel / Spectrum panel [415583266] (Universal Roblox Palette ID)
-        local palette = Instance.new("ImageLabel")
-        palette.Size = UDim2.new(0, 120, 0, 100)
-        palette.Position = UDim2.new(0, 14, 0, 10)
-        palette.Image = "rbxassetid://415583266"
-        palette.BorderSizePixel = 0
-        palette.ZIndex = 7
-        palette.Parent = tray
+        -- Procedural Paint UI setup (HSV gradients generated strictly in Lua)
+        local hueSlider = Instance.new("Frame")
+        hueSlider.Size = UDim2.new(1, -28, 0, 14)
+        hueSlider.Position = UDim2.new(0, 14, 0, 10)
+        hueSlider.ZIndex = 7
+        hueSlider.Parent = tray
 
-        local paletteCorner = Instance.new("UICorner")
-        paletteCorner.CornerRadius = UDim.new(0, 6)
-        paletteCorner.Parent = palette
+        local hueCorner = Instance.new("UICorner")
+        hueCorner.CornerRadius = UDim.new(1, 0)
+        hueCorner.Parent = hueSlider
 
-        local selectorNode = Instance.new("Frame")
-        selectorNode.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        selectorNode.Size = UDim2.new(0, 8, 0, 8)
-        selectorNode.Position = UDim2.new(0.5, -4, 0.5, -4)
-        selectorNode.ZIndex = 8
-        selectorNode.Parent = palette
+        local hueGrad = Instance.new("UIGradient")
+        hueGrad.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 1, 1)),
+            ColorSequenceKeypoint.new(0.16, Color3.fromHSV(0.16, 1, 1)),
+            ColorSequenceKeypoint.new(0.33, Color3.fromHSV(0.33, 1, 1)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromHSV(0.5, 1, 1)),
+            ColorSequenceKeypoint.new(0.66, Color3.fromHSV(0.66, 1, 1)),
+            ColorSequenceKeypoint.new(0.83, Color3.fromHSV(0.83, 1, 1)),
+            ColorSequenceKeypoint.new(1, Color3.fromHSV(1, 1, 1))
+        })
+        hueGrad.Parent = hueSlider
 
-        local selectorCorner = Instance.new("UICorner")
-        selectorCorner.CornerRadius = UDim.new(1, 0)
-        selectorCorner.Parent = selectorNode
+        local hueNode = Instance.new("Frame")
+        hueNode.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        hueNode.Size = UDim2.new(0, 6, 0, 18)
+        hueNode.Position = UDim2.new(0.5, -3, 0.5, -9)
+        hueNode.ZIndex = 8
+        hueNode.Parent = hueSlider
 
-        -- Lightness/Darkness Slider
+        local hueNodeCorner = Instance.new("UICorner")
+        hueNodeCorner.CornerRadius = UDim.new(1, 0)
+        hueNodeCorner.Parent = hueNode
+
+        local satSlider = Instance.new("Frame")
+        satSlider.Size = UDim2.new(1, -28, 0, 14)
+        satSlider.Position = UDim2.new(0, 14, 0, 36)
+        satSlider.ZIndex = 7
+        satSlider.Parent = tray
+
+        local satCorner = Instance.new("UICorner")
+        satCorner.CornerRadius = UDim.new(1, 0)
+        satCorner.Parent = satSlider
+
+        local satGrad = Instance.new("UIGradient")
+        satGrad.Parent = satSlider
+
+        local satNode = Instance.new("Frame")
+        satNode.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        satNode.Size = UDim2.new(0, 6, 0, 18)
+        satNode.Position = UDim2.new(0.5, -3, 0.5, -9)
+        satNode.ZIndex = 8
+        satNode.Parent = satSlider
+
+        local satNodeCorner = Instance.new("UICorner")
+        satNodeCorner.CornerRadius = UDim.new(1, 0)
+        satNodeCorner.Parent = satNode
+
         local valSlider = Instance.new("Frame")
-        valSlider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        valSlider.Size = UDim2.new(1, -164, 0, 12)
-        valSlider.Position = UDim2.new(0, 150, 0, 20)
+        valSlider.Size = UDim2.new(1, -28, 0, 14)
+        valSlider.Position = UDim2.new(0, 14, 0, 62)
         valSlider.ZIndex = 7
         valSlider.Parent = tray
 
@@ -1153,67 +1193,81 @@ function Window:AddTab(name, iconId)
         valCorner.CornerRadius = UDim.new(1, 0)
         valCorner.Parent = valSlider
 
-        local valGradient = Instance.new("UIGradient")
-        valGradient.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 0)),
-            ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255))
-        })
-        valGradient.Parent = valSlider
+        local valGrad = Instance.new("UIGradient")
+        valGrad.Parent = valSlider
 
-        local valCursor = Instance.new("Frame")
-        valCursor.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        valCursor.Size = UDim2.new(0, 6, 0, 16)
-        valCursor.Position = UDim2.new(1, -3, 0.5, -8)
-        valCursor.ZIndex = 8
-        valCursor.Parent = valSlider
+        local valNode = Instance.new("Frame")
+        valNode.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        valNode.Size = UDim2.new(0, 6, 0, 18)
+        valNode.Position = UDim2.new(0.5, -3, 0.5, -9)
+        valNode.ZIndex = 8
+        valNode.Parent = valSlider
 
-        local valCursorCorner = Instance.new("UICorner")
-        valCursorCorner.CornerRadius = UDim.new(1, 0)
-        valCursorCorner.Parent = valCursor
+        local valNodeCorner = Instance.new("UICorner")
+        valNodeCorner.CornerRadius = UDim.new(1, 0)
+        valNodeCorner.Parent = valNode
 
-        local value_H, value_S, value_V = color:ToHSV()
+        local currentH, currentS, currentV = color:ToHSV()
 
-        local function updatePaletteColor(mouseX, mouseY)
-            local relX = math.clamp((mouseX - palette.AbsolutePosition.X) / palette.AbsoluteSize.X, 0, 1)
-            local relY = math.clamp((mouseY - palette.AbsolutePosition.Y) / palette.AbsoluteSize.Y, 0, 1)
-            selectorNode.Position = UDim2.new(relX, -4, relY, -4)
-            
-            value_H = 1 - relX
-            value_S = 1 - relY
-            
-            color = Color3.fromHSV(value_H, value_S, value_V)
+        local function updateGradients()
+            satGrad.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+                ColorSequenceKeypoint.new(1, Color3.fromHSV(currentH, 1, 1))
+            })
+            valGrad.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 0)),
+                ColorSequenceKeypoint.new(1, Color3.fromHSV(currentH, currentS, 1))
+            })
+        end
+
+        local function updateColor()
+            color = Color3.fromHSV(currentH, currentS, currentV)
             swatch.BackgroundColor3 = color
+            updateGradients()
             if config.Callback then pcall(config.Callback, color) end
         end
 
-        local function updateLightness(mouseX)
-            local relX = math.clamp((mouseX - valSlider.AbsolutePosition.X) / valSlider.AbsoluteSize.X, 0, 1)
-            valCursor.Position = UDim2.new(relX, -3, 0.5, -8)
-            
-            value_V = relX
-            
-            color = Color3.fromHSV(value_H, value_S, value_V)
-            swatch.BackgroundColor3 = color
-            if config.Callback then pcall(config.Callback, color) end
+        local function dragHue(inputX)
+            local ratio = math.clamp((inputX - hueSlider.AbsolutePosition.X) / hueSlider.AbsoluteSize.X, 0, 1)
+            hueNode.Position = UDim2.new(ratio, -3, 0.5, -9)
+            currentH = ratio
+            updateColor()
         end
 
-        SetupUnifiedDrag(palette, function(pos)
-            updatePaletteColor(pos.X, pos.Y)
-        end, function(pos)
-            updatePaletteColor(pos.X, pos.Y)
-        end)
+        local function dragSat(inputX)
+            local ratio = math.clamp((inputX - satSlider.AbsolutePosition.X) / satSlider.AbsoluteSize.X, 0, 1)
+            satNode.Position = UDim2.new(ratio, -3, 0.5, -9)
+            currentS = ratio
+            updateColor()
+        end
 
-        SetupUnifiedDrag(valSlider, function(pos)
-            updateLightness(pos.X)
-        end, function(pos)
-            updateLightness(pos.X)
-        end)
+        local function dragVal(inputX)
+            local ratio = math.clamp((inputX - valSlider.AbsolutePosition.X) / valSlider.AbsoluteSize.X, 0, 1)
+            valNode.Position = UDim2.new(ratio, -3, 0.5, -9)
+            currentV = ratio
+            updateColor()
+        end
+
+        SetupUnifiedDrag(hueSlider, function(pos) dragHue(pos.X) end, function(pos) dragHue(pos.X) end)
+        SetupUnifiedDrag(hueNode, function(pos) dragHue(pos.X) end, function(pos) dragHue(pos.X) end)
+
+        SetupUnifiedDrag(satSlider, function(pos) dragSat(pos.X) end, function(pos) dragSat(pos.X) end)
+        SetupUnifiedDrag(satNode, function(pos) dragSat(pos.X) end, function(pos) dragSat(pos.X) end)
+
+        SetupUnifiedDrag(valSlider, function(pos) dragVal(pos.X) end, function(pos) dragVal(pos.X) end)
+        SetupUnifiedDrag(valNode, function(pos) dragVal(pos.X) end, function(pos) dragVal(pos.X) end)
 
         swatch.MouseButton1Click:Connect(function()
             isOpen = not isOpen
             if isOpen then
-                SmoothTween(container, { Size = UDim2.new(1, 0, 0, 156) }, 0.25, Enum.EasingStyle.Quint)
-                SmoothTween(tray, { Size = UDim2.new(1, 0, 0, 120) }, 0.25, Enum.EasingStyle.Quint)
+                currentH, currentS, currentV = color:ToHSV()
+                hueNode.Position = UDim2.new(currentH, -3, 0.5, -9)
+                satNode.Position = UDim2.new(currentS, -3, 0.5, -9)
+                valNode.Position = UDim2.new(currentV, -3, 0.5, -9)
+                updateGradients()
+                
+                SmoothTween(container, { Size = UDim2.new(1, 0, 0, 130) }, 0.25, Enum.EasingStyle.Quint)
+                SmoothTween(tray, { Size = UDim2.new(1, 0, 0, 94) }, 0.25, Enum.EasingStyle.Quint)
             else
                 SmoothTween(container, { Size = UDim2.new(1, 0, 0, 36) }, 0.2)
                 SmoothTween(tray, { Size = UDim2.new(1, 0, 0, 0) }, 0.2)
@@ -1226,9 +1280,11 @@ function Window:AddTab(name, iconId)
             Set = function(_, col)
                 color = col
                 swatch.BackgroundColor3 = col
-                value_H, value_S, value_V = col:ToHSV()
-                selectorNode.Position = UDim2.new(1 - value_H, -4, 1 - value_S, -4)
-                valCursor.Position = UDim2.new(value_V, -3, 0.5, -8)
+                currentH, currentS, currentV = col:ToHSV()
+                hueNode.Position = UDim2.new(currentH, -3, 0.5, -9)
+                satNode.Position = UDim2.new(currentS, -3, 0.5, -9)
+                valNode.Position = UDim2.new(currentV, -3, 0.5, -9)
+                updateGradients()
                 if config.Callback then pcall(config.Callback, col) end
             end
         }
@@ -1271,19 +1327,19 @@ function LiquidGlass.Notify(config)
 
         notifyContainer = Instance.new("Frame")
         notifyContainer.BackgroundTransparency = 1
-        notifyContainer.Size = UDim2.new(0, 260, 1, 0)
-        notifyContainer.Position = UDim2.new(1, -274, 0, 0)
-        notifyContainer.ZIndex = 100
+        notifyContainer.Size = UDim2.new(0, 300, 1, 0)
+        notifyContainer.Position = UDim2.new(0.5, -150, 0, 0)
+        notifyContainer.ZIndex = 150
         notifyContainer.Parent = gui
 
         local list = Instance.new("UIListLayout")
         list.SortOrder = Enum.SortOrder.LayoutOrder
-        list.VerticalAlignment = Enum.VerticalAlignment.Bottom
-        list.Padding = UDim.new(0, 6)
+        list.VerticalAlignment = Enum.VerticalAlignment.Top
+        list.Padding = UDim.new(0, 8)
         list.Parent = notifyContainer
 
         local pad = Instance.new("UIPadding")
-        pad.PaddingBottom = UDim.new(0, 14)
+        pad.PaddingTop = UDim.new(0, 20)
         pad.Parent = notifyContainer
     end
 
@@ -1295,63 +1351,108 @@ function LiquidGlass.Notify(config)
     }
     local statusColor = typeColors[ntype] or Theme.Accent
 
-    local card, _ = BuildGlassFrame({
-        Size = UDim2.new(1, 0, 0, 58),
-        Radius = UDim.new(0, 8),
-        ZIndex = 101
-    })
-    card.BackgroundTransparency = 0.1
+    local card = Instance.new("Frame")
+    card.Name = "iPhoneNotification"
+    card.BackgroundColor3 = Theme.GlassSurface
+    card.BackgroundTransparency = 0.08
+    card.Size = UDim2.new(1, 0, 0, 48)
     card.ClipsDescendants = true
-
-    local indicator = Instance.new("Frame")
-    indicator.BackgroundColor3 = statusColor
-    indicator.BorderSizePixel = 0
-    indicator.Size = UDim2.new(0, 3, 1, 0)
-    indicator.ZIndex = 102
-    indicator.Parent = card
-
-    local ttl = Instance.new("TextLabel")
-    ttl.BackgroundTransparency = 1
-    ttl.Size = UDim2.new(1, -24, 0, 18)
-    ttl.Position = UDim2.new(0, 12, 0, 6)
-    ttl.Font = Enum.Font.GothamBold
-    ttl.Text = title
-    ttl.TextColor3 = statusColor
-    ttl.TextSize = 11
-    ttl.TextXAlignment = Enum.TextXAlignment.Left
-    ttl.ZIndex = 102
-    ttl.Parent = card
-
-    local msg = Instance.new("TextLabel")
-    msg.BackgroundTransparency = 1
-    msg.Size = UDim2.new(1, -24, 0, 24)
-    msg.Position = UDim2.new(0, 12, 0, 24)
-    msg.Font = Enum.Font.Gotham
-    msg.Text = message
-    msg.TextColor3 = Theme.TextSecondary
-    msg.TextSize = 10
-    msg.TextWrapped = true
-    msg.TextXAlignment = Enum.TextXAlignment.Left
-    msg.ZIndex = 102
-    msg.Parent = card
-
-    local prog = Instance.new("Frame")
-    prog.BackgroundColor3 = statusColor
-    prog.BackgroundTransparency = 0.4
-    prog.BorderSizePixel = 0
-    prog.Size = UDim2.new(1, 0, 0, 2)
-    prog.Position = UDim2.new(0, 0, 1, -2)
-    prog.ZIndex = 102
-    prog.Parent = card
-
-    card.Position = UDim2.new(1, 20, 0, 0)
+    card.ZIndex = 151
     card.Parent = notifyContainer
 
-    SmoothTween(card, { Position = UDim2.new(0, 0, 0, 0) }, 0.35, Enum.EasingStyle.Back)
-    SmoothTween(prog, { Size = UDim2.new(0, 0, 0, 2) }, duration, Enum.EasingStyle.Linear)
+    local cardCorner = Instance.new("UICorner")
+    cardCorner.CornerRadius = UDim.new(1, 0)
+    cardCorner.Parent = card
+
+    local cardStroke = Instance.new("UIStroke")
+    cardStroke.Color = Theme.GlassBorder
+    cardStroke.Transparency = 0.8
+    cardStroke.Thickness = 1
+    cardStroke.Parent = card
+
+    -- Notification badge icon
+    local icon = Instance.new("Frame")
+    icon.BackgroundColor3 = statusColor
+    icon.Size = UDim2.new(0, 24, 0, 24)
+    icon.Position = UDim2.new(0, 12, 0.5, -12)
+    icon.ZIndex = 152
+    icon.Parent = card
+
+    local iconCorner = Instance.new("UICorner")
+    iconCorner.CornerRadius = UDim.new(1, 0)
+    iconCorner.Parent = icon
+
+    local iconLabel = Instance.new("TextLabel")
+    iconLabel.BackgroundTransparency = 1
+    iconLabel.Size = UDim2.new(1, 0, 1, 0)
+    iconLabel.Font = Enum.Font.GothamBold
+    iconLabel.Text = "!"
+    iconLabel.TextColor3 = Color3.fromRGB(15, 15, 20)
+    iconLabel.TextSize = 12
+    iconLabel.ZIndex = 153
+    iconLabel.Parent = icon
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Size = UDim2.new(1, -94, 0, 14)
+    titleLabel.Position = UDim2.new(0, 44, 0, 10)
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.Text = title
+    titleLabel.TextColor3 = Theme.TextPrimary
+    titleLabel.TextSize = 11
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.ZIndex = 152
+    titleLabel.Parent = card
+
+    local msgLabel = Instance.new("TextLabel")
+    msgLabel.BackgroundTransparency = 1
+    msgLabel.Size = UDim2.new(1, -94, 0, 14)
+    msgLabel.Position = UDim2.new(0, 44, 0, 24)
+    msgLabel.Font = Enum.Font.Gotham
+    msgLabel.Text = message
+    msgLabel.TextColor3 = Theme.TextSecondary
+    msgLabel.TextSize = 10
+    msgLabel.TextXAlignment = Enum.TextXAlignment.Left
+    msgLabel.ZIndex = 152
+    msgLabel.Parent = card
+
+    local timeLabel = Instance.new("TextLabel")
+    timeLabel.BackgroundTransparency = 1
+    timeLabel.Size = UDim2.new(0, 40, 0, 14)
+    timeLabel.Position = UDim2.new(1, -52, 0, 10)
+    timeLabel.Font = Enum.Font.Gotham
+    timeLabel.Text = "now"
+    timeLabel.TextColor3 = Theme.TextMuted
+    timeLabel.TextSize = 10
+    timeLabel.TextXAlignment = Enum.TextXAlignment.Right
+    timeLabel.ZIndex = 152
+    timeLabel.Parent = card
+
+    card.Size = UDim2.new(1, 0, 0, 0)
+    card.BackgroundTransparency = 1
+    cardStroke.Transparency = 1
+    icon.BackgroundTransparency = 1
+    iconLabel.TextTransparency = 1
+    titleLabel.TextTransparency = 1
+    msgLabel.TextTransparency = 1
+    timeLabel.TextTransparency = 1
+
+    SmoothTween(card, { Size = UDim2.new(1, 0, 0, 48), BackgroundTransparency = 0.08 }, 0.4, Enum.EasingStyle.Back)
+    SmoothTween(cardStroke, { Transparency = 0.8 }, 0.4)
+    SmoothTween(icon, { BackgroundTransparency = 0 }, 0.4)
+    SmoothTween(iconLabel, { TextTransparency = 0 }, 0.4)
+    SmoothTween(titleLabel, { TextTransparency = 0 }, 0.4)
+    SmoothTween(msgLabel, { TextTransparency = 0 }, 0.4)
+    SmoothTween(timeLabel, { TextTransparency = 0 }, 0.4)
 
     task.delay(duration, function()
-        SmoothTween(card, { Position = UDim2.new(1, 20, 0, 0), BackgroundTransparency = 1 }, 0.3)
+        SmoothTween(card, { Size = UDim2.new(1, 0, 0, 0), BackgroundTransparency = 1 }, 0.3)
+        SmoothTween(cardStroke, { Transparency = 1 }, 0.3)
+        SmoothTween(icon, { BackgroundTransparency = 1 }, 0.3)
+        SmoothTween(iconLabel, { TextTransparency = 1 }, 0.3)
+        SmoothTween(titleLabel, { TextTransparency = 1 }, 0.3)
+        SmoothTween(msgLabel, { TextTransparency = 1 }, 0.3)
+        SmoothTween(timeLabel, { TextTransparency = 1 }, 0.3)
         task.delay(0.3, function() card:Destroy() end)
     end)
 end
