@@ -121,7 +121,7 @@ local function BuildGlassFrame(props)
     return frame
 end
 
--- Floating Dropdown System
+-- Floating Dropdown System (Fully Fixed)
 local function CreateFloatingDropdown(parentGui, trigger, options, default, useSearch, callback)
     local selected = default or (options[1] or "Select...")
     local isOpen = false
@@ -160,7 +160,7 @@ local function CreateFloatingDropdown(parentGui, trigger, options, default, useS
         closeBtn.MouseButton1Click:Connect(closeDropdown)
 
         floatingFrame = Instance.new("CanvasGroup")
-        floatingFrame.Size = UDim2.new(0, 260, 0, 0) -- Diperlebar menjadi 260px
+        floatingFrame.Size = UDim2.new(0, 260, 0, 0)
         floatingFrame.Position = UDim2.new(0, trigger.AbsolutePosition.X, 0, trigger.AbsolutePosition.Y + trigger.AbsoluteSize.Y + 6)
         floatingFrame.ZIndex = 9999
         floatingFrame.GroupTransparency = 1
@@ -178,25 +178,25 @@ local function CreateFloatingDropdown(parentGui, trigger, options, default, useS
         dropShadow.ZIndex = 9998
         dropShadow.Parent = floatingFrame
 
-        local listFrame = BuildGlassFrame({
-            Size = UDim2.new(1, 0, 1, 0),
-            Radius = UDim.new(0, 10),
-            Color = Theme.GlassSurface,
-            Transparency = 0.0,
-            ClipsDescendants = true,
-            ZIndex = 9999,
-            AddStroke = false
-        })
+        -- Solid background to prevent white corners
+        local listFrame = Instance.new("Frame")
+        listFrame.Size = UDim2.new(1, 0, 1, 0)
+        listFrame.BackgroundColor3 = Theme.GlassSurface
+        listFrame.BackgroundTransparency = 0.0
+        listFrame.BorderSizePixel = 0
+        listFrame.ClipsDescendants = true
+        listFrame.ZIndex = 9999
+        Instance.new("UICorner", listFrame).CornerRadius = UDim.new(0, 10)
         listFrame.Parent = floatingFrame
 
         local searchBox = nil
-        local scrollerY = 8
+        local scrollerY = 10
         if useSearch then
             searchBox = Instance.new("TextBox")
-            searchBox.Size = UDim2.new(1, -16, 0, 36)
-            searchBox.Position = UDim2.new(0, 8, 0, 8)
+            searchBox.Size = UDim2.new(1, -20, 0, 38)
+            searchBox.Position = UDim2.new(0, 10, 0, 10)
             searchBox.BackgroundColor3 = Theme.ElementSurface
-            searchBox.BackgroundTransparency = 0.2
+            searchBox.BackgroundTransparency = 0.1
             searchBox.FontFace = Theme.FontRegular
             searchBox.PlaceholderText = "🔍 Search..."
             searchBox.PlaceholderColor3 = Theme.TextMuted
@@ -204,23 +204,21 @@ local function CreateFloatingDropdown(parentGui, trigger, options, default, useS
             searchBox.TextSize = 13
             searchBox.Text = ""
             searchBox.TextStrokeTransparency = 1 -- No outline
+            searchBox.TextXAlignment = Enum.TextXAlignment.Left
+            searchBox.ClearTextOnFocus = false
             searchBox.Parent = listFrame
-            Instance.new("UICorner", searchBox).CornerRadius = UDim.new(0, 6)
+            Instance.new("UICorner", searchBox).CornerRadius = UDim.new(0, 8)
             
-            local ss = Instance.new("UIStroke", searchBox)
-            ss.Color = Color3.fromRGB(255, 255, 255)
-            ss.Transparency = 0.8
-            ss.Thickness = 1
-
             local sp = Instance.new("UIPadding", searchBox)
-            sp.PaddingLeft = UDim.new(0, 12) -- Spacing sempurna
-            sp.PaddingRight = UDim.new(0, 12)
-            scrollerY = 52
+            sp.PaddingLeft = UDim.new(0, 14) -- Perfect spacing
+            sp.PaddingRight = UDim.new(0, 14)
+            
+            scrollerY = 58
         end
 
         local scroller = Instance.new("ScrollingFrame")
         scroller.BackgroundTransparency = 1
-        scroller.Size = UDim2.new(1, 0, 1, -scrollerY - 8)
+        scroller.Size = UDim2.new(1, 0, 1, -scrollerY - 10)
         scroller.Position = UDim2.new(0, 0, 0, scrollerY)
         scroller.ScrollBarThickness = 4
         scroller.ScrollBarImageColor3 = Theme.Accent
@@ -233,14 +231,15 @@ local function CreateFloatingDropdown(parentGui, trigger, options, default, useS
         layout.Padding = UDim.new(0, 4)
 
         local pad = Instance.new("UIPadding", scroller)
-        pad.PaddingLeft = UDim.new(0, 8)
-        pad.PaddingRight = UDim.new(0, 8)
-        pad.PaddingBottom = UDim.new(0, 8)
+        pad.PaddingLeft = UDim.new(0, 10)
+        pad.PaddingRight = UDim.new(0, 10)
+        pad.PaddingTop = UDim.new(0, 4)
+        pad.PaddingBottom = UDim.new(0, 10)
 
         local hoverInd = Instance.new("Frame")
         hoverInd.BackgroundColor3 = Theme.Accent
         hoverInd.BackgroundTransparency = 0.8
-        hoverInd.Size = UDim2.new(1, -16, 0, 34)
+        hoverInd.Size = UDim2.new(1, -20, 0, 34)
         hoverInd.ZIndex = 10000
         hoverInd.Visible = false
         Instance.new("UICorner", hoverInd).CornerRadius = UDim.new(0, 6)
@@ -270,13 +269,14 @@ local function CreateFloatingDropdown(parentGui, trigger, options, default, useS
 
                     optBtn.MouseEnter:Connect(function()
                         hoverInd.Visible = true
-                        SmoothTween(hoverInd, {Position = UDim2.new(0, 0, 0, (count-1)*38), BackgroundTransparency = 0.7}, 0.15)
+                        SmoothTween(hoverInd, {Position = UDim2.new(0, 0, 0, (count-1)*38 + 4), BackgroundTransparency = 0.7}, 0.15)
                     end)
                     optBtn.MouseLeave:Connect(function()
                         SmoothTween(hoverInd, {BackgroundTransparency = 0.8}, 0.15)
                     end)
                     
                     optBtn.MouseButton1Click:Connect(function()
+                        if searchBox then searchBox:ReleaseFocus() end -- Fix click apply bug
                         selected = value
                         trigger.Text = value .. "  ▾"
                         closeDropdown()
@@ -285,9 +285,14 @@ local function CreateFloatingDropdown(parentGui, trigger, options, default, useS
                 end
             end
             
-            local searchH = useSearch and 52 or 0
-            local listH = (count * 34) + ((count - 1) * 4) + scrollerY + 16
-            local targetHeight = math.clamp(listH, 0, 280)
+            -- Fix empty slot on scroll with precise math calculation
+            local itemH = 34
+            local gap = 4
+            local topPad = 4
+            local bottomPad = 10
+            local contentH = (count * itemH) + (count > 0 and (count - 1) * gap or 0) + topPad + bottomPad
+            local totalH = scrollerY + contentH + 10
+            local targetHeight = math.clamp(totalH, 0, 300)
             SmoothTween(floatingFrame, {Size = UDim2.new(0, 260, 0, targetHeight)}, 0.3, Enum.EasingStyle.Quint)
         end
 
@@ -341,7 +346,7 @@ function LiquidGlass:CreateWindow(config)
     self.Executor = GetExecutorName()
 
     local gui = Instance.new("ScreenGui")
-    gui.Name = "LiquidGlassV12_Ultra"
+    gui.Name = "LiquidGlassV13_Ultra"
     gui.ResetOnSpawn = false
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     gui.IgnoreGuiInset = true
@@ -877,7 +882,7 @@ function Window:AddTab(name, iconId)
         local mainGui = tabData._gui
 
         local groupFrame = BuildGlassFrame({
-            Size = UDim2.new(1, 0, 0, 0), -- Y diatur 0 agar AutomaticSize berfungsi
+            Size = UDim2.new(1, 0, 0, 0),
             Radius = UDim.new(0, 10),
             Color = Theme.GlassSurface,
             Transparency = 0.0,
@@ -1251,7 +1256,7 @@ function Window:AddTab(name, iconId)
 
             local label = Instance.new("TextLabel")
             label.BackgroundTransparency = 1
-            label.Size = UDim2.new(1, -130, 1, 0)
+            label.Size = UDim2.new(1, -140, 1, 0)
             label.Position = UDim2.new(0, 14, 0, 0)
             label.FontFace = Theme.FontSemiBold
             label.Text = dropConfig.Text or "Dropdown"
@@ -1263,21 +1268,17 @@ function Window:AddTab(name, iconId)
 
             local trigger = Instance.new("TextButton")
             trigger.BackgroundColor3 = Theme.Accent
-            trigger.BackgroundTransparency = 0.8
-            trigger.Size = UDim2.new(0, 110, 0, 28)
-            trigger.Position = UDim2.new(1, -124, 0.5, -14)
+            trigger.BackgroundTransparency = 0.1 -- Solid background
+            trigger.Size = UDim2.new(0, 120, 0, 30)
+            trigger.Position = UDim2.new(1, -132, 0.5, -15)
             trigger.FontFace = Theme.FontSemiBold
             trigger.Text = selected .. "  ▾"
             trigger.TextColor3 = Theme.TextPrimary
-            trigger.TextSize = 12
+            trigger.TextSize = 13
+            trigger.TextStrokeTransparency = 1 -- No outline
             trigger.TextTruncate = Enum.TextTruncate.AtEnd
             trigger.Parent = container
-            Instance.new("UICorner", trigger).CornerRadius = UDim.new(0, 6)
-            
-            local trigStroke = Instance.new("UIStroke", trigger)
-            trigStroke.Color = Theme.Accent
-            trigStroke.Transparency = 0.4
-            trigStroke.Thickness = 1
+            Instance.new("UICorner", trigger).CornerRadius = UDim.new(0, 8)
 
             local ddObj = CreateFloatingDropdown(mainGui, trigger, options, selected, useSearch, dropConfig.Callback)
 
@@ -1323,9 +1324,6 @@ function Window:AddTab(name, iconId)
             box.Parent = container
             
             Instance.new("UICorner", box).CornerRadius = UDim.new(0, 6)
-            local bs = Instance.new("UIStroke", box)
-            bs.Color = Color3.fromRGB(255, 255, 255)
-            bs.Transparency = 0.8
             Instance.new("UIPadding", box).PaddingLeft = UDim.new(0, 8)
 
             box.FocusLost:Connect(function(entered)
@@ -1367,7 +1365,7 @@ function Window:AddTab(name, iconId)
 
             local trigger = Instance.new("TextButton")
             trigger.BackgroundColor3 = Theme.Accent
-            trigger.BackgroundTransparency = 0.8
+            trigger.BackgroundTransparency = 0.1
             trigger.Size = UDim2.new(0, 90, 0, 28)
             trigger.Position = UDim2.new(1, -104, 0.5, -14)
             trigger.FontFace = Theme.FontBold
@@ -1376,9 +1374,6 @@ function Window:AddTab(name, iconId)
             trigger.TextSize = 12
             trigger.Parent = row
             Instance.new("UICorner", trigger).CornerRadius = UDim.new(0, 6)
-            local ts = Instance.new("UIStroke", trigger)
-            ts.Color = Theme.Accent
-            ts.Transparency = 0.4
 
             trigger.MouseButton1Click:Connect(function()
                 if listening then return end
@@ -1614,7 +1609,6 @@ function Window:AddTab(name, iconId)
                     cursor.Position = UDim2.new(value_S, -4, 1 - value_V, -4)
                     hueCursor.Position = UDim2.new(0, -2, value_H, -2)
                     updatePickers()
-                    -- Fix Color Picker Clipping (Diperbesar dari 176 menjadi 190)
                     SmoothTween(container, { Size = UDim2.new(1, 0, 0, 190) }, 0.35, Theme.TweenStyle)
                     SmoothTween(tray, { Size = UDim2.new(1, 0, 0, 146) }, 0.35, Theme.TweenStyle)
                 else
