@@ -6,27 +6,28 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
+local Lighting = game:GetService("Lighting")
 
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
 local Theme = {
     GlassBackground = Color3.fromRGB(10, 11, 16),
-    GlassSurface = Color3.fromRGB(18, 20, 29),
+    GlassSurface = Color3.fromRGB(15, 17, 26),
     GlassBorder = Color3.fromRGB(255, 255, 255),
     Accent = Color3.fromRGB(120, 180, 255),
     AccentGlow = Color3.fromRGB(80, 140, 255),
     AccentDark = Color3.fromRGB(40, 100, 220),
     TextPrimary = Color3.fromRGB(255, 255, 255),
-    TextSecondary = Color3.fromRGB(185, 195, 215),
+    TextSecondary = Color3.fromRGB(180, 190, 210),
     TextMuted = Color3.fromRGB(115, 125, 145),
     Success = Color3.fromRGB(100, 225, 160),
     Warning = Color3.fromRGB(255, 195, 85),
     Danger = Color3.fromRGB(255, 95, 105),
-    GlassOpacity = 0.22,
-    BorderOpacity = 0.22,
-    ShadowOpacity = 0.60,
-    TweenSpeed = 0.28,
+    GlassOpacity = 0.16,
+    BorderOpacity = 0.24,
+    ShadowOpacity = 0.65,
+    TweenSpeed = 0.3,
     TweenStyle = Enum.EasingStyle.Quint,
     TweenDirection = Enum.EasingDirection.Out
 }
@@ -95,7 +96,7 @@ local function BuildGlassFrame(props)
     local gradient = Instance.new("UIGradient")
     gradient.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(130, 130, 130))
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(120, 120, 120))
     })
     gradient.Rotation = 45
     gradient.Parent = stroke
@@ -128,6 +129,18 @@ function LiquidGlass:CreateWindow(config)
     if not gui.Parent then gui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
     self._gui = gui
 
+    -- Setup dynamic Lighting blur
+    local lightingBlur = Lighting:FindFirstChild("LiquidGlassBackdropBlur")
+    if not lightingBlur then
+        lightingBlur = Instance.new("BlurEffect")
+        lightingBlur.Name = "LiquidGlassBackdropBlur"
+        lightingBlur.Size = 0
+        lightingBlur.Enabled = true
+        lightingBlur.Parent = Lighting
+    end
+    self._lightingBlur = lightingBlur
+    SmoothTween(lightingBlur, { Size = 18 }, 0.45)
+
     local winFrame, winStroke, winCorner = BuildGlassFrame({
         Size = UDim2.new(0, self.Width, 0, self.Height),
         Position = UDim2.new(0.5, -self.Width/2, 0.5, -self.Height/2),
@@ -140,18 +153,17 @@ function LiquidGlass:CreateWindow(config)
 
     local mainGradient = Instance.new("UIGradient")
     mainGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 22, 32)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 11, 16))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 17, 26)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(8, 9, 14))
     })
     mainGradient.Rotation = 135
     mainGradient.Parent = winFrame
 
-    -- Anchored shadow directly parented to the main frame to prevent resizing desync
     local shadow = Instance.new("ImageLabel")
     shadow.Name = "AnchoredShadow"
     shadow.BackgroundTransparency = 1
-    shadow.Size = UDim2.new(1, 38, 1, 38)
-    shadow.Position = UDim2.new(0, -19, 0, -19)
+    shadow.Size = UDim2.new(1, 44, 1, 44)
+    shadow.Position = UDim2.new(0, -22, 0, -22)
     shadow.Image = "rbxassetid://6015897843"
     shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
     shadow.ImageTransparency = 1 - Theme.ShadowOpacity
@@ -161,7 +173,6 @@ function LiquidGlass:CreateWindow(config)
     shadow.Parent = winFrame
     self._shadow = shadow
 
-    -- Glass specular gloss overlay
     local sheen = Instance.new("ImageLabel")
     sheen.Name = "Sheen"
     sheen.BackgroundTransparency = 1
@@ -178,7 +189,7 @@ function LiquidGlass:CreateWindow(config)
 
     local islandFrame = Instance.new("TextButton")
     islandFrame.Name = "DynamicIsland"
-    islandFrame.BackgroundColor3 = Color3.fromRGB(10, 11, 16)
+    islandFrame.BackgroundColor3 = Color3.fromRGB(8, 9, 14)
     islandFrame.BackgroundTransparency = 0.08
     islandFrame.BorderSizePixel = 0
     islandFrame.Size = UDim2.new(0, 180, 0, 36)
@@ -431,6 +442,7 @@ function LiquidGlass:CreateWindow(config)
 
             SmoothTween(canvas, { GroupTransparency = 1 }, 0.15)
             SmoothTween(shadow, { ImageTransparency = 1 }, 0.15)
+            SmoothTween(lightingBlur, { Size = 0 }, 0.35)
             task.delay(0.15, function()
                 canvas.Visible = false
             end)
@@ -462,15 +474,28 @@ function LiquidGlass:CreateWindow(config)
 
             SmoothTween(canvas, { GroupTransparency = 0 }, 0.3)
             SmoothTween(shadow, { ImageTransparency = 1 - Theme.ShadowOpacity }, 0.3)
+            SmoothTween(lightingBlur, { Size = 18 }, 0.35)
         end
     end
 
     minBtn.MouseButton1Click:Connect(ToggleMinimize)
     islandFrame.MouseButton1Click:Connect(ToggleMinimize)
 
+    -- Dynamic collapse close animation
     closeBtn.MouseButton1Click:Connect(function()
-        SmoothTween(winFrame, { Size = UDim2.new(0, self.Width, 0, 0), BackgroundTransparency = 1 }, 0.25)
-        task.delay(0.3, function() gui:Destroy() end)
+        SmoothTween(winFrame, { 
+            Size = UDim2.new(0, self.Width, 0, 0), 
+            Position = UDim2.new(0.5, -self.Width/2, 0.5, 0),
+            BackgroundTransparency = 1 
+        }, 0.35, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+        SmoothTween(canvas, { GroupTransparency = 1 }, 0.2)
+        SmoothTween(shadow, { ImageTransparency = 1 }, 0.2)
+        SmoothTween(lightingBlur, { Size = 0 }, 0.35)
+
+        task.delay(0.4, function() 
+            gui:Destroy() 
+            if lightingBlur then lightingBlur:Destroy() end
+        end)
     end)
 
     winFrame.Size = UDim2.new(0, self.Width, 0, 0)
@@ -1125,10 +1150,81 @@ function Window:AddTab(name, iconId)
         tray.ZIndex = 6
         tray.Parent = container
 
-        -- Procedural Paint UI setup (HSV gradients generated strictly in Lua)
+        -- Premium Procedural 2D SV Canvas Paint UI (Double-Gradient Overlay)
+        local svPicker = Instance.new("Frame")
+        svPicker.Size = UDim2.new(0, 110, 0, 110)
+        svPicker.Position = UDim2.new(0, 14, 0, 10)
+        svPicker.ZIndex = 7
+        svPicker.Parent = tray
+
+        local svCorner = Instance.new("UICorner")
+        svCorner.CornerRadius = UDim.new(0, 6)
+        svCorner.Parent = svPicker
+
+        -- Gradient 1: White to transparent (Horizontal)
+        local whiteGradFrame = Instance.new("Frame")
+        whiteGradFrame.Size = UDim2.new(1, 0, 1, 0)
+        whiteGradFrame.BackgroundTransparency = 0
+        whiteGradFrame.ZIndex = 8
+        whiteGradFrame.Parent = svPicker
+
+        local wgCorner = Instance.new("UICorner")
+        wgCorner.CornerRadius = UDim.new(0, 6)
+        wgCorner.Parent = whiteGradFrame
+
+        local whiteGrad = Instance.new("UIGradient")
+        whiteGrad.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255))
+        })
+        whiteGrad.Transparency = NumberSequence.new({
+            NumberSequenceKeypoint.new(0, 0),
+            NumberSequenceKeypoint.new(1, 1)
+        })
+        whiteGrad.Parent = whiteGradFrame
+
+        -- Gradient 2: Transparent to black (Vertical)
+        local blackGradFrame = Instance.new("Frame")
+        blackGradFrame.Size = UDim2.new(1, 0, 1, 0)
+        blackGradFrame.BackgroundTransparency = 0
+        blackGradFrame.ZIndex = 9
+        blackGradFrame.Parent = svPicker
+
+        local bgCorner = Instance.new("UICorner")
+        bgCorner.CornerRadius = UDim.new(0, 6)
+        bgCorner.Parent = blackGradFrame
+
+        local blackGrad = Instance.new("UIGradient")
+        blackGrad.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 0)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+        })
+        blackGrad.Transparency = NumberSequence.new({
+            NumberSequenceKeypoint.new(0, 1),
+            NumberSequenceKeypoint.new(1, 0)
+        })
+        blackGrad.Rotation = 90
+        blackGrad.Parent = blackGradFrame
+
+        local cursor = Instance.new("Frame")
+        cursor.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        cursor.Size = UDim2.new(0, 8, 0, 8)
+        cursor.ZIndex = 10
+        cursor.Parent = svPicker
+
+        local cursorCorner = Instance.new("UICorner")
+        cursorCorner.CornerRadius = UDim.new(1, 0)
+        cursorCorner.Parent = cursor
+
+        local cursorStroke = Instance.new("UIStroke")
+        cursorStroke.Color = Color3.fromRGB(0, 0, 0)
+        cursorStroke.Thickness = 1
+        cursorStroke.Parent = cursor
+
+        -- Hue vertical bar slider
         local hueSlider = Instance.new("Frame")
-        hueSlider.Size = UDim2.new(1, -28, 0, 14)
-        hueSlider.Position = UDim2.new(0, 14, 0, 10)
+        hueSlider.Size = UDim2.new(0, 16, 0, 110)
+        hueSlider.Position = UDim2.new(0, 134, 0, 10)
         hueSlider.ZIndex = 7
         hueSlider.Parent = tray
 
@@ -1146,128 +1242,61 @@ function Window:AddTab(name, iconId)
             ColorSequenceKeypoint.new(0.83, Color3.fromHSV(0.83, 1, 1)),
             ColorSequenceKeypoint.new(1, Color3.fromHSV(1, 1, 1))
         })
+        hueGrad.Rotation = 90
         hueGrad.Parent = hueSlider
 
-        local hueNode = Instance.new("Frame")
-        hueNode.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        hueNode.Size = UDim2.new(0, 6, 0, 18)
-        hueNode.Position = UDim2.new(0.5, -3, 0.5, -9)
-        hueNode.ZIndex = 8
-        hueNode.Parent = hueSlider
+        local hueCursor = Instance.new("Frame")
+        hueCursor.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        hueCursor.Size = UDim2.new(1, 4, 0, 4)
+        hueCursor.Position = UDim2.new(0, -2, 0, 0)
+        hueCursor.ZIndex = 8
+        hueCursor.Parent = hueSlider
 
-        local hueNodeCorner = Instance.new("UICorner")
-        hueNodeCorner.CornerRadius = UDim.new(1, 0)
-        hueNodeCorner.Parent = hueNode
+        local hueCursorStroke = Instance.new("UIStroke")
+        hueCursorStroke.Color = Color3.fromRGB(0, 0, 0)
+        hueCursorStroke.Thickness = 1
+        hueCursorStroke.Parent = hueCursor
 
-        local satSlider = Instance.new("Frame")
-        satSlider.Size = UDim2.new(1, -28, 0, 14)
-        satSlider.Position = UDim2.new(0, 14, 0, 36)
-        satSlider.ZIndex = 7
-        satSlider.Parent = tray
+        local value_H, value_S, value_V = color:ToHSV()
 
-        local satCorner = Instance.new("UICorner")
-        satCorner.CornerRadius = UDim.new(1, 0)
-        satCorner.Parent = satSlider
-
-        local satGrad = Instance.new("UIGradient")
-        satGrad.Parent = satSlider
-
-        local satNode = Instance.new("Frame")
-        satNode.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        satNode.Size = UDim2.new(0, 6, 0, 18)
-        satNode.Position = UDim2.new(0.5, -3, 0.5, -9)
-        satNode.ZIndex = 8
-        satNode.Parent = satSlider
-
-        local satNodeCorner = Instance.new("UICorner")
-        satNodeCorner.CornerRadius = UDim.new(1, 0)
-        satNodeCorner.Parent = satNode
-
-        local valSlider = Instance.new("Frame")
-        valSlider.Size = UDim2.new(1, -28, 0, 14)
-        valSlider.Position = UDim2.new(0, 14, 0, 62)
-        valSlider.ZIndex = 7
-        valSlider.Parent = tray
-
-        local valCorner = Instance.new("UICorner")
-        valCorner.CornerRadius = UDim.new(1, 0)
-        valCorner.Parent = valSlider
-
-        local valGrad = Instance.new("UIGradient")
-        valGrad.Parent = valSlider
-
-        local valNode = Instance.new("Frame")
-        valNode.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        valNode.Size = UDim2.new(0, 6, 0, 18)
-        valNode.Position = UDim2.new(0.5, -3, 0.5, -9)
-        valNode.ZIndex = 8
-        valNode.Parent = valSlider
-
-        local valNodeCorner = Instance.new("UICorner")
-        valNodeCorner.CornerRadius = UDim.new(1, 0)
-        valNodeCorner.Parent = valNode
-
-        local currentH, currentS, currentV = color:ToHSV()
-
-        local function updateGradients()
-            satGrad.Color = ColorSequence.new({
-                ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-                ColorSequenceKeypoint.new(1, Color3.fromHSV(currentH, 1, 1))
-            })
-            valGrad.Color = ColorSequence.new({
-                ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 0)),
-                ColorSequenceKeypoint.new(1, Color3.fromHSV(currentH, currentS, 1))
-            })
-        end
-
-        local function updateColor()
-            color = Color3.fromHSV(currentH, currentS, currentV)
+        local function updatePickers()
+            svPicker.BackgroundColor3 = Color3.fromHSV(value_H, 1, 1)
+            color = Color3.fromHSV(value_H, value_S, value_V)
             swatch.BackgroundColor3 = color
-            updateGradients()
             if config.Callback then pcall(config.Callback, color) end
         end
 
-        local function dragHue(inputX)
-            local ratio = math.clamp((inputX - hueSlider.AbsolutePosition.X) / hueSlider.AbsoluteSize.X, 0, 1)
-            hueNode.Position = UDim2.new(ratio, -3, 0.5, -9)
-            currentH = ratio
-            updateColor()
+        local function dragSV(mouseX, mouseY)
+            local relX = math.clamp((mouseX - svPicker.AbsolutePosition.X) / svPicker.AbsoluteSize.X, 0, 1)
+            local relY = math.clamp((mouseY - svPicker.AbsolutePosition.Y) / svPicker.AbsoluteSize.Y, 0, 1)
+            
+            cursor.Position = UDim2.new(relX, -4, relY, -4)
+            value_S = relX
+            value_V = 1 - relY
+            updatePickers()
         end
 
-        local function dragSat(inputX)
-            local ratio = math.clamp((inputX - satSlider.AbsolutePosition.X) / satSlider.AbsoluteSize.X, 0, 1)
-            satNode.Position = UDim2.new(ratio, -3, 0.5, -9)
-            currentS = ratio
-            updateColor()
+        local function dragHue(mouseY)
+            local relY = math.clamp((mouseY - hueSlider.AbsolutePosition.Y) / hueSlider.AbsoluteSize.Y, 0, 1)
+            hueCursor.Position = UDim2.new(0, -2, relY, -2)
+            value_H = relY
+            updatePickers()
         end
 
-        local function dragVal(inputX)
-            local ratio = math.clamp((inputX - valSlider.AbsolutePosition.X) / valSlider.AbsoluteSize.X, 0, 1)
-            valNode.Position = UDim2.new(ratio, -3, 0.5, -9)
-            currentV = ratio
-            updateColor()
-        end
-
-        SetupUnifiedDrag(hueSlider, function(pos) dragHue(pos.X) end, function(pos) dragHue(pos.X) end)
-        SetupUnifiedDrag(hueNode, function(pos) dragHue(pos.X) end, function(pos) dragHue(pos.X) end)
-
-        SetupUnifiedDrag(satSlider, function(pos) dragSat(pos.X) end, function(pos) dragSat(pos.X) end)
-        SetupUnifiedDrag(satNode, function(pos) dragSat(pos.X) end, function(pos) dragSat(pos.X) end)
-
-        SetupUnifiedDrag(valSlider, function(pos) dragVal(pos.X) end, function(pos) dragVal(pos.X) end)
-        SetupUnifiedDrag(valNode, function(pos) dragVal(pos.X) end, function(pos) dragVal(pos.X) end)
+        SetupUnifiedDrag(svPicker, function(pos) dragSV(pos.X, pos.Y) end, function(pos) dragSV(pos.X, pos.Y) end)
+        SetupUnifiedDrag(blackGradFrame, function(pos) dragSV(pos.X, pos.Y) end, function(pos) dragSV(pos.X, pos.Y) end)
+        SetupUnifiedDrag(hueSlider, function(pos) dragHue(pos.Y) end, function(pos) dragHue(pos.Y) end)
 
         swatch.MouseButton1Click:Connect(function()
             isOpen = not isOpen
             if isOpen then
-                currentH, currentS, currentV = color:ToHSV()
-                hueNode.Position = UDim2.new(currentH, -3, 0.5, -9)
-                satNode.Position = UDim2.new(currentS, -3, 0.5, -9)
-                valNode.Position = UDim2.new(currentV, -3, 0.5, -9)
-                updateGradients()
+                value_H, value_S, value_V = color:ToHSV()
+                svPicker.BackgroundColor3 = Color3.fromHSV(value_H, 1, 1)
+                cursor.Position = UDim2.new(value_S, -4, 1 - value_V, -4)
+                hueCursor.Position = UDim2.new(0, -2, value_H, -2)
                 
-                SmoothTween(container, { Size = UDim2.new(1, 0, 0, 130) }, 0.25, Enum.EasingStyle.Quint)
-                SmoothTween(tray, { Size = UDim2.new(1, 0, 0, 94) }, 0.25, Enum.EasingStyle.Quint)
+                SmoothTween(container, { Size = UDim2.new(1, 0, 0, 166) }, 0.25, Enum.EasingStyle.Quint)
+                SmoothTween(tray, { Size = UDim2.new(1, 0, 0, 130) }, 0.25, Enum.EasingStyle.Quint)
             else
                 SmoothTween(container, { Size = UDim2.new(1, 0, 0, 36) }, 0.2)
                 SmoothTween(tray, { Size = UDim2.new(1, 0, 0, 0) }, 0.2)
@@ -1280,11 +1309,10 @@ function Window:AddTab(name, iconId)
             Set = function(_, col)
                 color = col
                 swatch.BackgroundColor3 = col
-                currentH, currentS, currentV = col:ToHSV()
-                hueNode.Position = UDim2.new(currentH, -3, 0.5, -9)
-                satNode.Position = UDim2.new(currentS, -3, 0.5, -9)
-                valNode.Position = UDim2.new(currentV, -3, 0.5, -9)
-                updateGradients()
+                value_H, value_S, value_V = col:ToHSV()
+                svPicker.BackgroundColor3 = Color3.fromHSV(value_H, 1, 1)
+                cursor.Position = UDim2.new(value_S, -4, 1 - value_V, -4)
+                hueCursor.Position = UDim2.new(0, -2, value_H, -2)
                 if config.Callback then pcall(config.Callback, col) end
             end
         }
@@ -1370,7 +1398,6 @@ function LiquidGlass.Notify(config)
     cardStroke.Thickness = 1
     cardStroke.Parent = card
 
-    -- Notification badge icon
     local icon = Instance.new("Frame")
     icon.BackgroundColor3 = statusColor
     icon.Size = UDim2.new(0, 24, 0, 24)
