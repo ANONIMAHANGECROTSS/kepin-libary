@@ -10,8 +10,8 @@ local Lighting = game:GetService("Lighting")
 
 local LocalPlayer = Players.LocalPlayer
 
--- Setup Custom Font (Rubik Wet Paint)
-local CustomFont = Font.new("rbxassetid://12187369046", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+-- Setup Custom Font (Builder Mono)
+local CustomFont = Font.new("rbxassetid://16658246179", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
 
 local Theme = {
     GlassBackground = Color3.fromRGB(10, 12, 18),
@@ -161,19 +161,35 @@ local function CreateFloatingDropdown(parentGui, trigger, options, default, useS
         closeBtn.MouseButton1Click:Connect(closeDropdown)
 
         floatingFrame = Instance.new("CanvasGroup")
-        floatingFrame.Size = UDim2.new(0, trigger.AbsoluteSize.X, 0, 0)
+        -- Diperlebar dari mengikuti tombol menjadi 240px agar teks tidak terpotong
+        floatingFrame.Size = UDim2.new(0, 240, 0, 0)
         floatingFrame.Position = UDim2.new(0, trigger.AbsolutePosition.X, 0, trigger.AbsolutePosition.Y + trigger.AbsoluteSize.Y + 6)
         floatingFrame.ZIndex = 9999
         floatingFrame.GroupTransparency = 1
         floatingFrame.Parent = parentGui
 
+        -- Tambahkan Shadow pada dropdown untuk efek mengambang
+        local dropShadow = Instance.new("ImageLabel")
+        dropShadow.BackgroundTransparency = 1
+        dropShadow.Size = UDim2.new(1, 30, 1, 30)
+        dropShadow.Position = UDim2.new(0, -15, 0, -15)
+        dropShadow.Image = "rbxassetid://6015897843"
+        dropShadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+        dropShadow.ImageTransparency = 0.4
+        dropShadow.ScaleType = Enum.ScaleType.Slice
+        dropShadow.SliceCenter = Rect.new(47, 47, 450, 450)
+        dropShadow.ZIndex = 9998
+        dropShadow.Parent = floatingFrame
+
+        -- Fix Tepi Putih: Menggunakan AddStroke = false
         local listFrame = BuildGlassFrame({
             Size = UDim2.new(1, 0, 1, 0),
-            Radius = UDim.new(0, 8),
+            Radius = UDim.new(0, 10),
             Color = Theme.GlassSurface,
             Transparency = 0.0,
             ClipsDescendants = true,
-            ZIndex = 9999
+            ZIndex = 9999,
+            AddStroke = false
         })
         listFrame.Parent = floatingFrame
 
@@ -189,7 +205,7 @@ local function CreateFloatingDropdown(parentGui, trigger, options, default, useS
             searchBox.PlaceholderText = "🔍 Search..."
             searchBox.PlaceholderColor3 = Theme.TextMuted
             searchBox.TextColor3 = Theme.TextPrimary
-            searchBox.TextSize = 12
+            searchBox.TextSize = 13
             searchBox.Text = ""
             searchBox.Parent = listFrame
             Instance.new("UICorner", searchBox).CornerRadius = UDim.new(0, 6)
@@ -249,7 +265,7 @@ local function CreateFloatingDropdown(parentGui, trigger, options, default, useS
                     optBtn.FontFace = Theme.FontRegular
                     optBtn.Text = value
                     optBtn.TextColor3 = (value == selected) and Theme.Accent or Theme.TextSecondary
-                    optBtn.TextSize = 12
+                    optBtn.TextSize = 13
                     optBtn.TextXAlignment = Enum.TextXAlignment.Left
                     optBtn.ZIndex = 10001
                     optBtn.Parent = scroller
@@ -273,8 +289,8 @@ local function CreateFloatingDropdown(parentGui, trigger, options, default, useS
             
             local searchH = useSearch and 44 or 0
             local listH = (count * 32) + scrollerY + 6
-            local targetHeight = math.clamp(listH, 0, 220)
-            SmoothTween(floatingFrame, {Size = UDim2.new(0, trigger.AbsoluteSize.X, 0, targetHeight)}, 0.3, Enum.EasingStyle.Quint)
+            local targetHeight = math.clamp(listH, 0, 260)
+            SmoothTween(floatingFrame, {Size = UDim2.new(0, 240, 0, targetHeight)}, 0.3, Enum.EasingStyle.Quint)
         end
 
         if searchBox then
@@ -1623,8 +1639,9 @@ function Window:AddTab(name, iconId)
                     cursor.Position = UDim2.new(value_S, -4, 1 - value_V, -4)
                     hueCursor.Position = UDim2.new(0, -2, value_H, -2)
                     updatePickers()
-                    SmoothTween(container, { Size = UDim2.new(1, 0, 0, 176) }, 0.35, Theme.TweenStyle)
-                    SmoothTween(tray, { Size = UDim2.new(1, 0, 0, 132) }, 0.35, Theme.TweenStyle)
+                    -- Fix Color Picker Clipping (Diperbesar dari 176 menjadi 190)
+                    SmoothTween(container, { Size = UDim2.new(1, 0, 0, 190) }, 0.35, Theme.TweenStyle)
+                    SmoothTween(tray, { Size = UDim2.new(1, 0, 0, 146) }, 0.35, Theme.TweenStyle)
                 else
                     SmoothTween(container, { Size = UDim2.new(1, 0, 0, 44) }, 0.3, Enum.EasingStyle.Quad)
                     SmoothTween(tray, { Size = UDim2.new(1, 0, 0, 0) }, 0.3, Enum.EasingStyle.Quad)
