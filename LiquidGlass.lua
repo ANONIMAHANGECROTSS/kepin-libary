@@ -12,8 +12,8 @@ local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
 local Theme = {
-    GlassBackground = Color3.fromRGB(11, 12, 20),
-    GlassSurface = Color3.fromRGB(16, 18, 30),
+    GlassBackground = Color3.fromRGB(10, 11, 18),
+    GlassSurface = Color3.fromRGB(15, 17, 26),
     GlassBorder = Color3.fromRGB(255, 255, 255),
     Accent = Color3.fromRGB(44, 94, 254),
     AccentGlow = Color3.fromRGB(116, 54, 240),
@@ -23,10 +23,10 @@ local Theme = {
     Success = Color3.fromRGB(100, 225, 160),
     Warning = Color3.fromRGB(255, 195, 85),
     Danger = Color3.fromRGB(255, 95, 105),
-    GlassOpacity = 0.18,
+    GlassOpacity = 0.2,
     BorderOpacity = 0.22,
     ShadowOpacity = 0.70,
-    TweenSpeed = 0.15, -- Significantly faster animations
+    TweenSpeed = 0.16,
     TweenStyle = Enum.EasingStyle.Quad,
     TweenDirection = Enum.EasingDirection.Out
 }
@@ -110,7 +110,7 @@ function LiquidGlass:CreateWindow(config)
     config = config or {}
     local self = setmetatable({}, Window)
 
-    self.Title = config.Title or "AURA UI"
+    self.Title = config.Title or "Roblox UI Library"
     self.Subtitle = config.Subtitle or "v1.0"
     self.Width = config.Width or 640
     self.Height = config.Height or 440
@@ -120,7 +120,7 @@ function LiquidGlass:CreateWindow(config)
     self._minimized = false
 
     local gui = Instance.new("ScreenGui")
-    gui.Name = "LiquidGlassV4"
+    gui.Name = "LiquidGlassV5"
     gui.ResetOnSpawn = false
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     gui.IgnoreGuiInset = true
@@ -128,7 +128,6 @@ function LiquidGlass:CreateWindow(config)
     if not gui.Parent then gui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
     self._gui = gui
 
-    -- Backdrop blur system
     local lightingBlur = Lighting:FindFirstChild("LiquidGlassBackdropBlur")
     if not lightingBlur then
         lightingBlur = Instance.new("BlurEffect")
@@ -243,7 +242,6 @@ function LiquidGlass:CreateWindow(config)
     canvas.GroupTransparency = 0
     canvas.Parent = winFrame
 
-    -- Integrated Header Bar matches target style
     local header = Instance.new("Frame")
     header.Name = "Header"
     header.BackgroundTransparency = 0.98
@@ -283,7 +281,7 @@ function LiquidGlass:CreateWindow(config)
     local versionTag = Instance.new("TextLabel")
     versionTag.BackgroundColor3 = Theme.Accent
     versionTag.Size = UDim2.new(0, 32, 0, 16)
-    versionTag.Position = UDim2.new(0, 72, 0.5, -8)
+    versionTag.Position = UDim2.new(0, 88, 0.5, -8)
     versionTag.Font = Enum.Font.GothamBold
     versionTag.Text = self.Subtitle
     versionTag.TextColor3 = Theme.TextPrimary
@@ -295,7 +293,7 @@ function LiquidGlass:CreateWindow(config)
     vtCorner.CornerRadius = UDim.new(0, 4)
     vtCorner.Parent = versionTag
 
-    -- Mock Search Box from target style
+    -- Central Search Container
     local searchBar = Instance.new("Frame")
     searchBar.BackgroundColor3 = Color3.fromRGB(24, 26, 42)
     searchBar.BackgroundTransparency = 0.4
@@ -336,6 +334,48 @@ function LiquidGlass:CreateWindow(config)
     searchBox.ZIndex = 6
     searchBox.Parent = searchBar
 
+    -- Action Header Icons (Help, Bell, Profile Headshot)
+    local actionPanel = Instance.new("Frame")
+    actionPanel.BackgroundTransparency = 1
+    actionPanel.Size = UDim2.new(0, 120, 1, 0)
+    actionPanel.Position = UDim2.new(1, -210, 0, 0)
+    actionPanel.ZIndex = 5
+    actionPanel.Parent = header
+
+    local actLayout = Instance.new("UIListLayout")
+    actLayout.FillDirection = Enum.FillDirection.Horizontal
+    actLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+    actLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    actLayout.Padding = UDim.new(0, 12)
+    actLayout.Parent = actionPanel
+
+    local helpIcon = Instance.new("ImageButton")
+    helpIcon.BackgroundTransparency = 1
+    helpIcon.Size = UDim2.new(0, 16, 0, 16)
+    helpIcon.Image = "rbxassetid://10747384394"
+    helpIcon.ImageColor3 = Theme.TextSecondary
+    helpIcon.ZIndex = 6
+    helpIcon.Parent = actionPanel
+
+    local bellIcon = Instance.new("ImageButton")
+    bellIcon.BackgroundTransparency = 1
+    bellIcon.Size = UDim2.new(0, 16, 0, 16)
+    bellIcon.Image = "rbxassetid://10747373861"
+    bellIcon.ImageColor3 = Theme.TextSecondary
+    bellIcon.ZIndex = 6
+    bellIcon.Parent = actionPanel
+
+    local pfpCircle = Instance.new("ImageLabel")
+    pfpCircle.BackgroundColor3 = Color3.fromRGB(35, 40, 60)
+    pfpCircle.Size = UDim2.new(0, 22, 0, 22)
+    pfpCircle.Image = "rbxassetid://10014792610"
+    pfpCircle.ZIndex = 6
+    pfpCircle.Parent = actionPanel
+
+    local pfpCorner = Instance.new("UICorner")
+    pfpCorner.CornerRadius = UDim.new(1, 0)
+    pfpCorner.Parent = pfpCircle
+
     local controls = Instance.new("Frame")
     controls.BackgroundTransparency = 1
     controls.Size = UDim2.new(0, 70, 1, 0)
@@ -369,20 +409,6 @@ function LiquidGlass:CreateWindow(config)
     minCorner.CornerRadius = UDim.new(1, 0)
     minCorner.Parent = minBtn
 
-    local dragStart, startPos
-    SetupUnifiedDrag(header, function(mousePos)
-        dragStart = mousePos
-        startPos = winFrame.Position
-    end, function(mousePos)
-        local delta = mousePos - dragStart
-        winFrame.Position = UDim2.new(
-            startPos.X.Scale,
-            startPos.X.Offset + delta.X,
-            startPos.Y.Scale,
-            startPos.Y.Offset + delta.Y
-        )
-    end)
-
     local workspaceFrame = Instance.new("Frame")
     workspaceFrame.BackgroundTransparency = 1
     workspaceFrame.Size = UDim2.new(1, 0, 1, -48)
@@ -410,7 +436,7 @@ function LiquidGlass:CreateWindow(config)
     local tabScroller = Instance.new("ScrollingFrame")
     tabScroller.BackgroundTransparency = 1
     tabScroller.BorderSizePixel = 0
-    tabScroller.Size = UDim2.new(1, -1, 1, -95) -- Room for pro upgrade card
+    tabScroller.Size = UDim2.new(1, -1, 1, -95)
     tabScroller.ScrollBarThickness = 0
     tabScroller.ZIndex = 5
     tabScroller.Parent = sidebar
@@ -423,10 +449,22 @@ function LiquidGlass:CreateWindow(config)
     local tabPad = Instance.new("UIPadding")
     tabPad.PaddingLeft = UDim.new(0, 8)
     tabPad.PaddingRight = UDim.new(0, 8)
-    tabPad.PaddingTop = UDim.new(0, 8)
+    tabPad.PaddingTop = UDim.new(0, 26) -- Padding for custom label
     tabPad.Parent = tabScroller
 
-    -- Left sidebar upgrade block
+    -- Left navigation group category title
+    local catTitle = Instance.new("TextLabel")
+    catTitle.BackgroundTransparency = 1
+    catTitle.Size = UDim2.new(1, -16, 0, 18)
+    catTitle.Position = UDim2.new(0, 16, 0, 8)
+    catTitle.Font = Enum.Font.GothamBold
+    catTitle.Text = "PAGES"
+    catTitle.TextColor3 = Theme.TextMuted
+    catTitle.TextSize = 9
+    catTitle.TextXAlignment = Enum.TextXAlignment.Left
+    catTitle.ZIndex = 6
+    catTitle.Parent = sidebar
+
     local proCard = Instance.new("Frame")
     proCard.Name = "ProCard"
     proCard.BackgroundColor3 = Color3.fromRGB(20, 22, 38)
@@ -450,7 +488,7 @@ function LiquidGlass:CreateWindow(config)
     pcTitle.Size = UDim2.new(1, -16, 0, 18)
     pcTitle.Position = UDim2.new(0, 8, 0, 6)
     pcTitle.Font = Enum.Font.GothamBold
-    pcTitle.Text = "👑 UI Library Pro"
+    pcTitle.Text = "⚡ UI Library Pro"
     pcTitle.TextColor3 = Theme.TextPrimary
     pcTitle.TextSize = 11
     pcTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -490,6 +528,14 @@ function LiquidGlass:CreateWindow(config)
         ColorSequenceKeypoint.new(1, Theme.AccentGlow)
     })
     pcbGrad.Parent = pcBtn
+
+    pcBtn.MouseButton1Click:Connect(function()
+        LiquidGlass.Notify({
+            Title = "UI Pro Mode",
+            Message = "Pro Upgrade sequence initiated successfully.",
+            Type = "success"
+        })
+    end)
 
     local contentArea = Instance.new("Frame")
     contentArea.Name = "ContentArea"
@@ -632,7 +678,7 @@ function Window:AddTab(name, iconId)
     tabBtn.BackgroundColor3 = Theme.Accent
     tabBtn.BackgroundTransparency = 1
     tabBtn.BorderSizePixel = 0
-    tabBtn.Size = UDim2.new(1, 0, 0, 30)
+    tabBtn.Size = UDim2.new(1, 0, 0, 32)
     tabBtn.Font = Enum.Font.GothamSemibold
     tabBtn.Text = ""
     tabBtn.ZIndex = 6
@@ -790,7 +836,25 @@ function Window:AddTab(name, iconId)
             SmoothTween(btn, { BackgroundTransparency = 1 - Theme.GlassOpacity }, 0.1)
         end)
         click.MouseButton1Down:Connect(function()
-            Util.Ripple(btn, Mouse.X, Mouse.Y)
+            local x, y = Mouse.X, Mouse.Y
+            local ripple = Instance.new("Frame")
+            ripple.Name = "Ripple"
+            ripple.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            ripple.BackgroundTransparency = 0.8
+            ripple.BorderSizePixel = 0
+            ripple.ZIndex = btn.ZIndex + 10
+            ripple.Size = UDim2.new(0, 0, 0, 0)
+            ripple.Position = UDim2.new(0, x - btn.AbsolutePosition.X, 0, y - btn.AbsolutePosition.Y)
+            ripple.AnchorPoint = Vector2.new(0.5, 0.5)
+
+            local rCorner = Instance.new("UICorner")
+            rCorner.CornerRadius = UDim.new(1, 0)
+            rCorner.Parent = ripple
+            ripple.Parent = btn
+
+            local size = math.max(btn.AbsoluteSize.X, btn.AbsoluteSize.Y) * 2.2
+            SmoothTween(ripple, { Size = UDim2.new(0, size, 0, size), BackgroundTransparency = 1 }, 0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+            task.delay(0.5, function() ripple:Destroy() end)
         end)
         click.MouseButton1Click:Connect(function()
             if config.Callback then pcall(config.Callback) end
@@ -1451,6 +1515,7 @@ end
 
 local notifyContainer = nil
 
+-- Remade iPhone Capsule Notification System
 function LiquidGlass.Notify(config)
     config = config or {}
     local title = config.Title or "Notification"
@@ -1469,19 +1534,20 @@ function LiquidGlass.Notify(config)
 
         notifyContainer = Instance.new("Frame")
         notifyContainer.BackgroundTransparency = 1
-        notifyContainer.Size = UDim2.new(0, 300, 1, 0)
-        notifyContainer.Position = UDim2.new(0.5, -150, 0, 0)
+        notifyContainer.Size = UDim2.new(0, 310, 1, 0)
+        notifyContainer.Position = UDim2.new(0.5, -155, 0, 0)
         notifyContainer.ZIndex = 150
         notifyContainer.Parent = gui
 
         local list = Instance.new("UIListLayout")
         list.SortOrder = Enum.SortOrder.LayoutOrder
         list.VerticalAlignment = Enum.VerticalAlignment.Top
-        list.Padding = UDim.new(0, 8)
+        list.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        list.Padding = UDim.new(0, 10)
         list.Parent = notifyContainer
 
         local pad = Instance.new("UIPadding")
-        pad.PaddingTop = UDim.new(0, 20)
+        pad.PaddingTop = UDim.new(0, 16)
         pad.Parent = notifyContainer
     end
 
@@ -1497,27 +1563,48 @@ function LiquidGlass.Notify(config)
     card.Name = "iPhoneNotification"
     card.BackgroundColor3 = Theme.GlassSurface
     card.BackgroundTransparency = 0.08
-    card.Size = UDim2.new(1, 0, 0, 48)
+    card.Size = UDim2.new(1, 0, 0, 52)
     card.ClipsDescendants = true
     card.ZIndex = 151
     card.Parent = notifyContainer
 
     local cardCorner = Instance.new("UICorner")
-    cardCorner.CornerRadius = UDim.new(1, 0)
+    cardCorner.CornerRadius = UDim.new(1, 0) -- Pure capsule look
     cardCorner.Parent = card
 
     local cardStroke = Instance.new("UIStroke")
     cardStroke.Color = Theme.GlassBorder
     cardStroke.Transparency = 0.8
-    cardStroke.Thickness = 1
+    cardStroke.Thickness = 1.2
     cardStroke.Parent = card
+
+    local strokeGrad = Instance.new("UIGradient")
+    strokeGrad.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(1, statusColor)
+    })
+    strokeGrad.Rotation = 45
+    strokeGrad.Parent = cardStroke
+
+    -- Premium Glow Ring Badge
+    local ringGlow = Instance.new("Frame")
+    ringGlow.BackgroundColor3 = statusColor
+    ringGlow.BackgroundTransparency = 0.65
+    ringGlow.Size = UDim2.new(0, 30, 0, 30)
+    ringGlow.Position = UDim2.new(0, 12, 0.5, -15)
+    ringGlow.ZIndex = 152
+    ringGlow.Parent = card
+
+    local ringGlowCorner = Instance.new("UICorner")
+    ringGlowCorner.CornerRadius = UDim.new(1, 0)
+    ringGlowCorner.Parent = ringGlow
 
     local icon = Instance.new("Frame")
     icon.BackgroundColor3 = statusColor
     icon.Size = UDim2.new(0, 24, 0, 24)
-    icon.Position = UDim2.new(0, 12, 0.5, -12)
-    icon.ZIndex = 152
-    icon.Parent = card
+    icon.Position = UDim2.new(0.5, -12, 0.5, -12)
+    icon.ZIndex = 153
+    icon.Parent = ringGlow
 
     local iconCorner = Instance.new("UICorner")
     iconCorner.CornerRadius = UDim.new(1, 0)
@@ -1527,74 +1614,85 @@ function LiquidGlass.Notify(config)
     iconLabel.BackgroundTransparency = 1
     iconLabel.Size = UDim2.new(1, 0, 1, 0)
     iconLabel.Font = Enum.Font.GothamBold
-    iconLabel.Text = "!"
-    iconLabel.TextColor3 = Color3.fromRGB(15, 15, 20)
-    iconLabel.TextSize = 12
-    iconLabel.ZIndex = 153
+    iconLabel.Text = (ntype == "success" and "✓") or (ntype == "warning" and "⚠") or (ntype == "danger" and "✕") or "i"
+    iconLabel.TextColor3 = Color3.fromRGB(12, 13, 20)
+    iconLabel.TextSize = 13
+    iconLabel.ZIndex = 154
     iconLabel.Parent = icon
+
+    local textGroup = Instance.new("Frame")
+    textGroup.BackgroundTransparency = 1
+    textGroup.Size = UDim2.new(1, -114, 1, 0)
+    textGroup.Position = UDim2.new(0, 52, 0, 0)
+    textGroup.ZIndex = 152
+    textGroup.Parent = card
 
     local titleLabel = Instance.new("TextLabel")
     titleLabel.BackgroundTransparency = 1
-    titleLabel.Size = UDim2.new(1, -94, 0, 14)
-    titleLabel.Position = UDim2.new(0, 44, 0, 10)
+    titleLabel.Size = UDim2.new(1, 0, 0.45, 0)
+    titleLabel.Position = UDim2.new(0, 0, 0.1, 0)
     titleLabel.Font = Enum.Font.GothamBold
     titleLabel.Text = title
     titleLabel.TextColor3 = Theme.TextPrimary
-    titleLabel.TextSize = 11
+    titleLabel.TextSize = 11.5
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.ZIndex = 152
-    titleLabel.Parent = card
+    titleLabel.Parent = textGroup
 
     local msgLabel = Instance.new("TextLabel")
     msgLabel.BackgroundTransparency = 1
-    msgLabel.Size = UDim2.new(1, -94, 0, 14)
-    msgLabel.Position = UDim2.new(0, 44, 0, 24)
+    msgLabel.Size = UDim2.new(1, 0, 0.45, 0)
+    msgLabel.Position = UDim2.new(0, 0, 0.45, 0)
     msgLabel.Font = Enum.Font.Gotham
     msgLabel.Text = message
     msgLabel.TextColor3 = Theme.TextSecondary
     msgLabel.TextSize = 10
     msgLabel.TextXAlignment = Enum.TextXAlignment.Left
     msgLabel.ZIndex = 152
-    msgLabel.Parent = card
+    msgLabel.Parent = textGroup
 
     local timeLabel = Instance.new("TextLabel")
     timeLabel.BackgroundTransparency = 1
-    timeLabel.Size = UDim2.new(0, 40, 0, 14)
-    timeLabel.Position = UDim2.new(1, -52, 0, 10)
-    timeLabel.Font = Enum.Font.Gotham
+    timeLabel.Size = UDim2.new(0, 50, 0, 14)
+    timeLabel.Position = UDim2.new(1, -62, 0, 10)
+    timeLabel.Font = Enum.Font.GothamSemibold
     timeLabel.Text = "now"
     timeLabel.TextColor3 = Theme.TextMuted
-    timeLabel.TextSize = 10
+    timeLabel.TextSize = 9.5
     timeLabel.TextXAlignment = Enum.TextXAlignment.Right
     timeLabel.ZIndex = 152
     timeLabel.Parent = card
 
+    -- Instant scaling and fading entrance sequence
     card.Size = UDim2.new(1, 0, 0, 0)
     card.BackgroundTransparency = 1
     cardStroke.Transparency = 1
+    ringGlow.BackgroundTransparency = 1
     icon.BackgroundTransparency = 1
     iconLabel.TextTransparency = 1
     titleLabel.TextTransparency = 1
     msgLabel.TextTransparency = 1
     timeLabel.TextTransparency = 1
 
-    SmoothTween(card, { Size = UDim2.new(1, 0, 0, 48), BackgroundTransparency = 0.08 }, 0.25, Enum.EasingStyle.Back)
-    SmoothTween(cardStroke, { Transparency = 0.8 }, 0.25)
-    SmoothTween(icon, { BackgroundTransparency = 0 }, 0.25)
-    SmoothTween(iconLabel, { TextTransparency = 0 }, 0.25)
-    SmoothTween(titleLabel, { TextTransparency = 0 }, 0.25)
-    SmoothTween(msgLabel, { TextTransparency = 0 }, 0.25)
-    SmoothTween(timeLabel, { TextTransparency = 0 }, 0.25)
+    SmoothTween(card, { Size = UDim2.new(1, 0, 0, 52), BackgroundTransparency = 0.08 }, 0.22, Enum.EasingStyle.Back)
+    SmoothTween(cardStroke, { Transparency = 0.8 }, 0.22)
+    SmoothTween(ringGlow, { BackgroundTransparency = 0.65 }, 0.22)
+    SmoothTween(icon, { BackgroundTransparency = 0 }, 0.22)
+    SmoothTween(iconLabel, { TextTransparency = 0 }, 0.22)
+    SmoothTween(titleLabel, { TextTransparency = 0 }, 0.22)
+    SmoothTween(msgLabel, { TextTransparency = 0 }, 0.22)
+    SmoothTween(timeLabel, { TextTransparency = 0 }, 0.22)
 
     task.delay(duration, function()
-        SmoothTween(card, { Size = UDim2.new(1, 0, 0, 0), BackgroundTransparency = 1 }, 0.18)
-        SmoothTween(cardStroke, { Transparency = 1 }, 0.18)
-        SmoothTween(icon, { BackgroundTransparency = 1 }, 0.18)
-        SmoothTween(iconLabel, { TextTransparency = 1 }, 0.18)
-        SmoothTween(titleLabel, { TextTransparency = 1 }, 0.18)
-        SmoothTween(msgLabel, { TextTransparency = 1 }, 0.18)
-        SmoothTween(timeLabel, { TextTransparency = 1 }, 0.18)
-        task.delay(0.2, function() card:Destroy() end)
+        SmoothTween(card, { Size = UDim2.new(1, 0, 0, 0), BackgroundTransparency = 1 }, 0.16)
+        SmoothTween(cardStroke, { Transparency = 1 }, 0.16)
+        SmoothTween(ringGlow, { BackgroundTransparency = 1 }, 0.16)
+        SmoothTween(icon, { BackgroundTransparency = 1 }, 0.16)
+        SmoothTween(iconLabel, { TextTransparency = 1 }, 0.16)
+        SmoothTween(titleLabel, { TextTransparency = 1 }, 0.16)
+        SmoothTween(msgLabel, { TextTransparency = 1 }, 0.16)
+        SmoothTween(timeLabel, { TextTransparency = 1 }, 0.16)
+        task.delay(0.18, function() card:Destroy() end)
     end)
 end
 
