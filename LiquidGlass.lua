@@ -317,7 +317,6 @@ function LiquidGlass:CreateWindow(config)
     vtCorner.CornerRadius = UDim.new(0, 4)
     vtCorner.Parent = versionTag
 
-    -- Translucent Glass Action Controls on Header Right (Minimize, Close) (24x24 px)
     local controls = Instance.new("Frame")
     controls.BackgroundTransparency = 1
     controls.Size = UDim2.new(0, 72, 1, 0)
@@ -726,7 +725,7 @@ function Window:AddTab(name, iconId)
 
     local leftColLayout = Instance.new("UIListLayout")
     leftColLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    leftColLayout.Padding = UDim.new(0, 6)
+    leftColLayout.Padding = UDim.new(0, 10) -- Premium Increased Spacing
     leftColLayout.Parent = leftCol
 
     local rightCol = Instance.new("Frame")
@@ -735,11 +734,11 @@ function Window:AddTab(name, iconId)
     rightCol.Size = UDim2.new(0.5, -4, 0, 0)
     rightCol.AutomaticSize = Enum.AutomaticSize.Y
     rightCol.ZIndex = 6
-    rightCol.Parent = page -- FIXED parent cyclic references bug
+    rightCol.Parent = page -- FIXED parenting reference error resolved!
 
     local rightColLayout = Instance.new("UIListLayout")
     rightColLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    rightColLayout.Padding = UDim.new(0, 6)
+    rightColLayout.Padding = UDim.new(0, 10) -- Premium Increased Spacing
     rightColLayout.Parent = rightCol
 
     local pageLayout = Instance.new("UIListLayout")
@@ -865,7 +864,7 @@ function Window:AddTab(name, iconId)
         colBtn.Parent = gHeader
 
         -- Restructured Body Container with corrected spacing
-        local gBody = Instance.new("Frame")
+        local gBody = Instance.new("CanvasGroup") -- Converted to CanvasGroup for ultra smooth grouping fades
         gBody.BackgroundTransparency = 1
         gBody.Position = UDim2.new(0, 0, 0, 32)
         gBody.Size = UDim2.new(1, 0, 1, -32)
@@ -875,7 +874,7 @@ function Window:AddTab(name, iconId)
 
         local gBodyLayout = Instance.new("UIListLayout")
         gBodyLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        gBodyLayout.Padding = UDim.new(0, 6)
+        gBodyLayout.Padding = UDim.new(0, 10) -- Premium Spacing Multiplier applied
         gBodyLayout.Parent = gBody
 
         local gBodyPad = Instance.new("UIPadding")
@@ -890,12 +889,27 @@ function Window:AddTab(name, iconId)
             isCollapsed = not isCollapsed
             if isCollapsed then
                 SmoothTween(colBtn, { Rotation = 180 }, 0.22, Theme.TweenStyle)
-                SmoothTween(groupFrame, { Size = UDim2.new(1, 0, 0, 32) }, 0.22, Theme.TweenStyle)
-                gBody.Visible = false
+                SmoothTween(gBody, { GroupTransparency = 1 }, 0.15, Enum.EasingStyle.Quad)
+                
+                -- Elastic minimize animation
+                groupFrame.AutomaticSize = Enum.AutomaticSize.None
+                SmoothTween(groupFrame, { Size = UDim2.new(1, 0, 0, 32) }, 0.22, Theme.TweenStyle):Completed:Connect(function()
+                    gBody.Visible = false
+                end)
             else
-                SmoothTween(colBtn, { Rotation = 0 }, 0.22, Theme.TweenStyle)
+                colBtn.Rotation = 180
                 gBody.Visible = true
-                groupFrame.Size = UDim2.new(1, 0, 0, 36)
+                gBody.GroupTransparency = 1
+                
+                SmoothTween(colBtn, { Rotation = 0 }, 0.22, Theme.TweenStyle)
+                SmoothTween(gBody, { GroupTransparency = 0 }, 0.2, Enum.EasingStyle.Quad)
+                
+                local targetHeight = 32 + gBody.AbsoluteSize.Y
+                SmoothTween(groupFrame, { Size = UDim2.new(1, 0, 0, targetHeight) }, 0.25, Theme.TweenStyle):Completed:Connect(function()
+                    if not isCollapsed then
+                        groupFrame.AutomaticSize = Enum.AutomaticSize.Y
+                    end
+                end)
             end
         end)
 
@@ -912,6 +926,9 @@ function Window:AddTab(name, iconId)
             btn.LayoutOrder = Group._order
             Group._order = Group._order + 1
             btn.ClipsDescendants = true
+
+            local uiScale_btn = Instance.new("UIScale")
+            uiScale_btn.Parent = btn
 
             local label = Instance.new("TextLabel")
             label.BackgroundTransparency = 1
@@ -934,6 +951,19 @@ function Window:AddTab(name, iconId)
 
             click.MouseEnter:Connect(function() SmoothTween(btn, { BackgroundTransparency = 0.8 }, 0.1, Enum.EasingStyle.Quad) end)
             click.MouseLeave:Connect(function() SmoothTween(btn, { BackgroundTransparency = 1 - Theme.GlassOpacity }, 0.1, Enum.EasingStyle.Quad) end)
+            
+            -- Elastic Click Squash (0.97 Scale)
+            click.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    SmoothTween(uiScale_btn, { Scale = 0.96 }, 0.08, Enum.EasingStyle.Quad)
+                end
+            end)
+            click.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    SmoothTween(uiScale_btn, { Scale = 1.0 }, 0.18, Enum.EasingStyle.Back)
+                end
+            end)
+
             click.MouseButton1Click:Connect(function()
                 if btnConfig.Callback then pcall(btnConfig.Callback) end
             end)
@@ -996,8 +1026,13 @@ function Window:AddTab(name, iconId)
             click.Parent = row
 
             local function updateToggle()
-                SmoothTween(track, { BackgroundTransparency = 0, BackgroundColor3 = state and Theme.Accent or Color3.fromRGB(55, 60, 75) }, 0.15, Theme.TweenStyle)
-                SmoothTween(thumb, { Position = state and UDim2.new(1, -12, 0.5, -5) or UDim2.new(0, 2, 0.5, -5) }, 0.15, Theme.TweenStyle)
+                -- Elastic stretch on active transition state
+                SmoothTween(track, { BackgroundColor3 = state and Theme.Accent or Color3.fromRGB(55, 60, 75) }, 0.12, Enum.EasingStyle.Quad)
+                local targetPos = state and UDim2.new(1, -12, 0.5, -5) or UDim2.new(0, 2, 0.5, -5)
+                
+                SmoothTween(thumb, { Position = targetPos, Size = UDim2.new(0, 13, 0, 9) }, 0.1, Enum.EasingStyle.Quad):Completed:Connect(function()
+                    SmoothTween(thumb, { Size = UDim2.new(0, 10, 0, 10) }, 0.14, Enum.EasingStyle.Back)
+                end)
             end
 
             click.MouseButton1Click:Connect(function()
@@ -1090,17 +1125,74 @@ function Window:AddTab(name, iconId)
             thumbCorner.CornerRadius = UDim.new(0, 3)
             thumbCorner.Parent = thumb
 
+            -- Floating specularity tooltip balloon (Fades in/out elegantly)
+            local tooltip, _, tooltipCorner = BuildGlassFrame({
+                Size = UDim2.new(0, 32, 0, 18),
+                Radius = UDim.new(0, 4),
+                ZIndex = 15
+            })
+            tooltip.BackgroundTransparency = 1
+            tooltip.Size = UDim2.new(0, 0, 0, 0) -- Scaled down initially
+            tooltip.Position = UDim2.new(0.5, 0, 0, -14)
+            tooltip.ClipsDescendants = true
+            tooltip.ZIndex = 15
+            tooltip.Parent = thumb
+
+            local tooltipStroke = tooltip:FindFirstChildOfClass("UIStroke")
+            if tooltipStroke then tooltipStroke.Enabled = false end
+
+            local tooltipLabel = Instance.new("TextLabel")
+            tooltipLabel.BackgroundTransparency = 1
+            tooltipLabel.Size = UDim2.new(1, 0, 1, 0)
+            tooltipLabel.Font = Enum.Font.GothamBold
+            tooltipLabel.Text = value .. suffix
+            tooltipLabel.TextColor3 = Theme.Accent
+            tooltipLabel.TextSize = 8
+            tooltipLabel.TextTransparency = 1
+            tooltipLabel.ZIndex = 16
+            tooltipLabel.Parent = tooltip
+
             local function updateSlider(inputX)
                 local ratio = math.clamp((inputX - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
                 value = math.floor(min + (max - min) * ratio)
                 fill.Size = UDim2.new(ratio, 0, 1, 0)
                 thumb.Position = UDim2.new(ratio, -4, 0.5, -4)
                 valLabel.Text = value .. suffix
+                tooltipLabel.Text = value .. suffix
                 if slidConfig.Callback then pcall(slidConfig.Callback, value) end
             end
 
-            SetupUnifiedDrag(track, function(pos) updateSlider(pos.X) end, function(pos) updateSlider(pos.X) end)
-            SetupUnifiedDrag(thumb, function(pos) updateSlider(pos.X) end, function(pos) updateSlider(pos.X) end)
+            -- Display Tooltip balloon on start dragging
+            local function showTooltip()
+                if tooltipStroke then tooltipStroke.Enabled = true end
+                SmoothTween(tooltip, { Size = UDim2.new(0, 32, 0, 18), Position = UDim2.new(0.5, -16, 0, -22), BackgroundTransparency = 0.1 }, 0.16, Enum.EasingStyle.Quad)
+                SmoothTween(tooltipLabel, { TextTransparency = 0 }, 0.16, Enum.EasingStyle.Quad)
+            end
+
+            local function hideTooltip()
+                SmoothTween(tooltip, { Size = UDim2.new(0, 0, 0, 0), Position = UDim2.new(0.5, 0, 0, -14), BackgroundTransparency = 1 }, 0.16, Enum.EasingStyle.Quad)
+                SmoothTween(tooltipLabel, { TextTransparency = 1 }, 0.16, Enum.EasingStyle.Quad):Completed:Connect(function()
+                    if tooltipStroke then tooltipStroke.Enabled = false end
+                end)
+            end
+
+            SetupUnifiedDrag(track, function(pos) 
+                showTooltip()
+                updateSlider(pos.X) 
+            end, function(pos) 
+                updateSlider(pos.X) 
+            end, function()
+                hideTooltip()
+            end)
+
+            SetupUnifiedDrag(thumb, function(pos) 
+                showTooltip()
+                updateSlider(pos.X) 
+            end, function(pos) 
+                updateSlider(pos.X) 
+            end, function()
+                hideTooltip()
+            end)
 
             container.Parent = gBody
             return {
@@ -1111,6 +1203,7 @@ function Window:AddTab(name, iconId)
                     fill.Size = UDim2.new(ratio, 0, 1, 0)
                     thumb.Position = UDim2.new(ratio, -4, 0.5, -4)
                     valLabel.Text = val .. suffix
+                    tooltipLabel.Text = val .. suffix
                     if slidConfig.Callback then pcall(slidConfig.Callback, val) end
                 end,
                 Get = function() return value end
@@ -1171,23 +1264,84 @@ function Window:AddTab(name, iconId)
             holderLayout.SortOrder = Enum.SortOrder.LayoutOrder
             holderLayout.Parent = listHolder
 
+            -- Real-time Search Box Filter Container
+            local searchBoxFrame = Instance.new("Frame")
+            searchBoxFrame.BackgroundColor3 = Color3.fromRGB(24, 26, 42)
+            searchBoxFrame.Size = UDim2.new(1, -12, 0, 24)
+            searchBoxFrame.Position = UDim2.new(0, 6, 0, 4)
+            searchBoxFrame.ZIndex = 9
+            searchBoxFrame.Visible = false
+            searchBoxFrame.Parent = listHolder
+
+            local sbfCorner = Instance.new("UICorner")
+            sbfCorner.CornerRadius = UDim.new(0, 4)
+            sbfCorner.Parent = searchBoxFrame
+
+            local sbfStroke = Instance.new("UIStroke")
+            sbfStroke.Color = Color3.fromRGB(255, 255, 255)
+            sbfStroke.Transparency = 0.93
+            sbfStroke.Parent = searchBoxFrame
+
+            local dropdownSearch = Instance.new("TextBox")
+            dropdownSearch.BackgroundTransparency = 1
+            dropdownSearch.Size = UDim2.new(1, -16, 1, 0)
+            dropdownSearch.Position = UDim2.new(0, 8, 0, 0)
+            dropdownSearch.Font = Enum.Font.Gotham
+            dropdownSearch.PlaceholderText = "Search item..."
+            dropdownSearch.PlaceholderColor3 = Theme.TextMuted
+            dropdownSearch.Text = ""
+            dropdownSearch.TextColor3 = Theme.TextPrimary
+            dropdownSearch.TextSize = 10
+            dropdownSearch.TextXAlignment = Enum.TextXAlignment.Left
+            dropdownSearch.ZIndex = 9
+            dropdownSearch.Parent = searchBoxFrame
+
             local function rebuildList()
                 for _, c in ipairs(listHolder:GetChildren()) do
                     if c:IsA("TextButton") then c:Destroy() end
                 end
 
+                local activeList = {}
                 for index, value in ipairs(options) do
+                    -- Filter options dynamically matching search text
+                    if dropdownSearch.Text == "" or string.find(string.lower(value), string.lower(dropdownSearch.Text)) then
+                        table.insert(activeList, value)
+                    end
+                end
+
+                for index, value in ipairs(activeList) do
                     local optBtn = Instance.new("TextButton")
                     optBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                     optBtn.BackgroundTransparency = (value == selected) and 0.9 or 1
                     optBtn.BorderSizePixel = 0
                     optBtn.Size = UDim2.new(1, 0, 0, 26)
                     optBtn.Font = Enum.Font.Gotham
-                    optBtn.Text = value
+                    optBtn.Text = "  " .. value
                     optBtn.TextColor3 = (value == selected) and Theme.Accent or Theme.TextSecondary
                     optBtn.TextSize = 10
+                    optBtn.TextXAlignment = Enum.TextXAlignment.Left
                     optBtn.ZIndex = 9
                     optBtn.Parent = listHolder
+
+                    -- Micro sliding left highlighting trail on enter
+                    local hoverIndicator = Instance.new("Frame")
+                    hoverIndicator.BackgroundColor3 = Theme.Accent
+                    hoverIndicator.Size = UDim2.new(0, 0, 0, 16)
+                    hoverIndicator.Position = UDim2.new(0, 4, 0.5, -8)
+                    hoverIndicator.BorderSizePixel = 0
+                    hoverIndicator.ZIndex = 10
+                    hoverIndicator.Parent = optBtn
+
+                    local hiCorner = Instance.new("UICorner")
+                    hiCorner.CornerRadius = UDim.new(0, 2)
+                    hiCorner.Parent = hoverIndicator
+
+                    optBtn.MouseEnter:Connect(function()
+                        SmoothTween(hoverIndicator, { Size = UDim2.new(0, 3, 0, 16) }, 0.1, Enum.EasingStyle.Quad)
+                    end)
+                    optBtn.MouseLeave:Connect(function()
+                        SmoothTween(hoverIndicator, { Size = UDim2.new(0, 0, 0, 16) }, 0.1, Enum.EasingStyle.Quad)
+                    end)
 
                     optBtn.MouseButton1Click:Connect(function()
                         selected = value
@@ -1198,16 +1352,25 @@ function Window:AddTab(name, iconId)
                         if dropConfig.Callback then pcall(dropConfig.Callback, value) end
                     end)
                 end
+
+                -- Recalculate heights including the Search Box frame
+                local heightOfEntries = #activeList * 26
+                local targetHeight = 34 + 32 + heightOfEntries
+                SmoothTween(container, { Size = UDim2.new(1, 0, 0, targetHeight) }, 0.2, Enum.EasingStyle.Quint)
             end
+
+            dropdownSearch:GetPropertyChangedSignal("Text"):Connect(rebuildList)
 
             trigger.MouseButton1Click:Connect(function()
                 isOpen = not isOpen
                 if isOpen then
+                    searchBoxFrame.Visible = true
+                    dropdownSearch.Text = ""
                     rebuildList()
-                    local targetHeight = 34 + (#options * 26)
-                    SmoothTween(container, { Size = UDim2.new(1, 0, 0, targetHeight) }, 0.2, Enum.EasingStyle.Quint)
                 else
-                    SmoothTween(container, { Size = UDim2.new(1, 0, 0, 34) }, 0.15)
+                    SmoothTween(container, { Size = UDim2.new(1, 0, 0, 34) }, 0.15):Completed:Connect(function()
+                        if not isOpen then searchBoxFrame.Visible = false end
+                    end)
                 end
             end)
 
