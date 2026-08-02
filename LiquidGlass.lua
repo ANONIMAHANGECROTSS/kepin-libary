@@ -1,67 +1,37 @@
---[[
-    ╔══════════════════════════════════════════════════════╗
-    ║         LIQUID GLASS UI LIBRARY v2.0                ║
-    ║         JAROT404 × KVNXY Team                       ║
-    ║         Premium Smooth Landscape UI Framework       ║
-    ╚══════════════════════════════════════════════════════╝
---]]
-
 local LiquidGlass = {}
 LiquidGlass.__index = LiquidGlass
 
--- ╔══════════════════════════════╗
--- ║        SERVICES              ║
--- ╚══════════════════════════════╝
-local Players         = game:GetService("Players")
-local TweenService    = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local RunService      = game:GetService("RunService")
-local CoreGui         = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
 
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
--- ╔══════════════════════════════╗
--- ║        THEME CONFIG          ║
--- ╚══════════════════════════════╝
 local Theme = {
-    -- Glass base
-    GlassBackground  = Color3.fromRGB(10, 10, 14),
-    GlassSurface     = Color3.fromRGB(20, 20, 28),
-    GlassBorder      = Color3.fromRGB(255, 255, 255),
-
-    -- Accent
-    Accent           = Color3.fromRGB(120, 180, 255),
-    AccentGlow       = Color3.fromRGB(80, 140, 255),
-    AccentDark       = Color3.fromRGB(40, 100, 220),
-
-    -- Text
-    TextPrimary      = Color3.fromRGB(255, 255, 255),
-    TextSecondary    = Color3.fromRGB(180, 190, 210),
-    TextMuted        = Color3.fromRGB(110, 120, 140),
-
-    -- States
-    Success          = Color3.fromRGB(100, 220, 160),
-    Warning          = Color3.fromRGB(255, 190, 80),
-    Danger           = Color3.fromRGB(255, 90, 100),
-
-    -- Opacity levels
-    GlassOpacity     = 0.12,   -- Main glass fill
-    BorderOpacity    = 0.15,   -- Border transparency
-    ShadowOpacity    = 0.65,   -- Drop shadow
-
-    -- Animation
-    TweenSpeed       = 0.26,
-    TweenStyle       = Enum.EasingStyle.Quint,
-    TweenDirection   = Enum.EasingDirection.Out,
+    GlassBackground = Color3.fromRGB(12, 12, 18),
+    GlassSurface = Color3.fromRGB(24, 25, 35),
+    GlassBorder = Color3.fromRGB(255, 255, 255),
+    Accent = Color3.fromRGB(120, 180, 255),
+    AccentGlow = Color3.fromRGB(80, 140, 255),
+    AccentDark = Color3.fromRGB(40, 100, 220),
+    TextPrimary = Color3.fromRGB(255, 255, 255),
+    TextSecondary = Color3.fromRGB(180, 190, 210),
+    TextMuted = Color3.fromRGB(110, 120, 140),
+    Success = Color3.fromRGB(100, 220, 160),
+    Warning = Color3.fromRGB(255, 190, 80),
+    Danger = Color3.fromRGB(255, 90, 100),
+    GlassOpacity = 0.15,
+    BorderOpacity = 0.18,
+    ShadowOpacity = 0.65,
+    TweenSpeed = 0.25,
+    TweenStyle = Enum.EasingStyle.Quint,
+    TweenDirection = Enum.EasingDirection.Out
 }
 
--- ╔══════════════════════════════╗
--- ║        UTILITIES             ║
--- ╚══════════════════════════════╝
-local Util = {}
-
-function Util.Tween(obj, props, duration, style, dir)
+local function SmoothTween(obj, props, duration, style, dir)
     local info = TweenInfo.new(
         duration or Theme.TweenSpeed,
         style or Theme.TweenStyle,
@@ -72,64 +42,37 @@ function Util.Tween(obj, props, duration, style, dir)
     return tween
 end
 
-function Util.MakeDraggable(frame, handle)
-    local dragging, dragStart, startPos = false, nil, nil
+-- Unified drag system for PC and Mobile touch inputs
+local function SetupUnifiedDrag(triggerFrame, onDragStart, onDragMove, onDragEnd)
+    local dragging = false
+    local dragConnection = nil
 
-    handle.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+    triggerFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
-            dragStart = input.Position
-            startPos = frame.Position
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
+            if onDragStart then onDragStart(input.Position) end
+            
+            if dragConnection then dragConnection:Disconnect() end
+            dragConnection = UserInputService.InputChanged:Connect(function(moveInput)
+                if dragging and (moveInput.UserInputType == Enum.UserInputType.MouseMovement or moveInput.UserInputType == Enum.UserInputType.Touch) then
+                    if onDragMove then onDragMove(moveInput.Position) end
                 end
             end)
         end
     end)
 
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local delta = input.Position - dragStart
-            Util.Tween(frame, {
-                Position = UDim2.new(
-                    startPos.X.Scale,
-                    startPos.X.Offset + delta.X,
-                    startPos.Y.Scale,
-                    startPos.Y.Offset + delta.Y
-                )
-            }, 0.08)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            if dragging then
+                dragging = false
+                if dragConnection then dragConnection:Disconnect() end
+                if onDragEnd then onDragEnd() end
+            end
         end
     end)
 end
 
-function Util.Ripple(parent, x, y)
-    local ripple = Instance.new("Frame")
-    ripple.Name = "Ripple"
-    ripple.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    ripple.BackgroundTransparency = 0.8
-    ripple.BorderSizePixel = 0
-    ripple.ZIndex = parent.ZIndex + 10
-    ripple.Size = UDim2.new(0, 0, 0, 0)
-    ripple.Position = UDim2.new(0, x - parent.AbsolutePosition.X, 0, y - parent.AbsolutePosition.Y)
-    ripple.AnchorPoint = Vector2.new(0.5, 0.5)
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(1, 0)
-    corner.Parent = ripple
-    ripple.Parent = parent
-
-    local size = math.max(parent.AbsoluteSize.X, parent.AbsoluteSize.Y) * 2.2
-    Util.Tween(ripple, { Size = UDim2.new(0, size, 0, size), BackgroundTransparency = 1 }, 0.5,
-        Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-
-    task.delay(0.5, function()
-        ripple:Destroy()
-    end)
-end
-
--- Create Standard Premium Frame
-local function MakeGlassFrame(props)
+local function BuildGlassFrame(props)
     local frame = Instance.new("Frame")
     frame.BackgroundColor3 = Theme.GlassSurface
     frame.BackgroundTransparency = 1 - Theme.GlassOpacity
@@ -140,7 +83,7 @@ local function MakeGlassFrame(props)
     frame.ZIndex = props.ZIndex or 1
 
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = props.Radius or UDim.new(0, 10)
+    corner.CornerRadius = props.Radius or UDim.new(0, 12)
     corner.Parent = frame
 
     local stroke = Instance.new("UIStroke")
@@ -150,12 +93,17 @@ local function MakeGlassFrame(props)
     stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     stroke.Parent = frame
 
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 150, 150))
+    })
+    gradient.Rotation = 45
+    gradient.Parent = stroke
+
     return frame, stroke, corner
 end
 
--- ╔══════════════════════════════╗
--- ║        WINDOW CLASS          ║
--- ╚══════════════════════════════╝
 local Window = {}
 Window.__index = Window
 
@@ -163,18 +111,16 @@ function LiquidGlass:CreateWindow(config)
     config = config or {}
     local self = setmetatable({}, Window)
 
-    self.Title     = config.Title    or "Liquid Glass Hub"
-    self.Subtitle  = config.Subtitle or "Premium System"
-    self.Width     = config.Width    or 620
-    self.Height    = config.Height   or 420
-    self.SidebarWidth = 160
-    self.Tabs      = {}
+    self.Title = config.Title or "Liquid Glass Hub"
+    self.Subtitle = config.Subtitle or "Mobile Ready"
+    self.Width = config.Width or 580
+    self.Height = config.Height or 400
+    self.SidebarWidth = 150
+    self.Tabs = {}
     self.ActiveTab = nil
-    self._minimized = false
 
-    -- ── Root ScreenGui ──
     local gui = Instance.new("ScreenGui")
-    gui.Name = "LiquidGlassPremiumUI"
+    gui.Name = "LiquidGlassV2"
     gui.ResetOnSpawn = false
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     gui.IgnoreGuiInset = true
@@ -182,55 +128,49 @@ function LiquidGlass:CreateWindow(config)
     if not gui.Parent then gui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
     self._gui = gui
 
-    -- ── Outer Shadow ──
     local shadowFrame = Instance.new("Frame")
     shadowFrame.Name = "Shadow"
     shadowFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    shadowFrame.BackgroundTransparency = 0.5
+    shadowFrame.BackgroundTransparency = 0.55
     shadowFrame.BorderSizePixel = 0
     shadowFrame.Size = UDim2.new(0, self.Width + 30, 0, self.Height + 30)
     shadowFrame.Position = UDim2.new(0.5, -(self.Width/2) - 15, 0.5, -(self.Height/2) - 15)
     shadowFrame.ZIndex = 1
     shadowFrame.Parent = gui
-    self._shadow = shadowFrame
 
     local shadowCorner = Instance.new("UICorner")
-    shadowCorner.CornerRadius = UDim.new(0, 16)
+    shadowCorner.CornerRadius = UDim.new(0, 18)
     shadowCorner.Parent = shadowFrame
 
-    -- ── Main Window Frame ──
-    local winFrame, winStroke, winCorner = MakeGlassFrame({
+    local winFrame, winStroke, winCorner = BuildGlassFrame({
         Size = UDim2.new(0, self.Width, 0, self.Height),
         Position = UDim2.new(0.5, -self.Width/2, 0.5, -self.Height/2),
         Radius = UDim.new(0, 14),
         ClipsDescendants = true,
-        ZIndex = 2,
+        ZIndex = 2
     })
-    winFrame.Name = "MainWindow"
     winFrame.Parent = gui
     self._winFrame = winFrame
 
-    local gradient = Instance.new("UIGradient")
-    gradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(18, 18, 26)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 10, 14)),
+    local mainGradient = Instance.new("UIGradient")
+    mainGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(16, 17, 24)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(8, 8, 12))
     })
-    gradient.Rotation = 135
-    gradient.Parent = winFrame
+    mainGradient.Rotation = 135
+    mainGradient.Parent = winFrame
 
-    -- ── Dynamic Island (Hidden Initially) ──
     local islandFrame = Instance.new("TextButton")
     islandFrame.Name = "DynamicIsland"
     islandFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
     islandFrame.BackgroundTransparency = 0.1
     islandFrame.BorderSizePixel = 0
     islandFrame.Size = UDim2.new(0, 180, 0, 36)
-    islandFrame.Position = UDim2.new(0.5, -90, 0, -50) -- Offscreen initially
+    islandFrame.Position = UDim2.new(0.5, -90, 0, -50)
     islandFrame.ZIndex = 100
     islandFrame.Visible = false
     islandFrame.Text = ""
     islandFrame.Parent = gui
-    self._islandFrame = islandFrame
 
     local islandCorner = Instance.new("UICorner")
     islandCorner.CornerRadius = UDim.new(1, 0)
@@ -238,12 +178,11 @@ function LiquidGlass:CreateWindow(config)
 
     local islandStroke = Instance.new("UIStroke")
     islandStroke.Color = Theme.Accent
-    islandStroke.Transparency = 0.7
+    islandStroke.Transparency = 0.6
     islandStroke.Thickness = 1
     islandStroke.Parent = islandFrame
 
     local islandDot = Instance.new("Frame")
-    islandDot.Name = "Dot"
     islandDot.BackgroundColor3 = Theme.Success
     islandDot.Size = UDim2.new(0, 6, 0, 6)
     islandDot.Position = UDim2.new(0, 14, 0.5, -3)
@@ -255,7 +194,6 @@ function LiquidGlass:CreateWindow(config)
     islandDotCorner.Parent = islandDot
 
     local islandTitle = Instance.new("TextLabel")
-    islandTitle.Name = "Title"
     islandTitle.BackgroundTransparency = 1
     islandTitle.Size = UDim2.new(1, -34, 1, 0)
     islandTitle.Position = UDim2.new(0, 26, 0, 0)
@@ -267,7 +205,6 @@ function LiquidGlass:CreateWindow(config)
     islandTitle.ZIndex = 101
     islandTitle.Parent = islandFrame
 
-    -- ── Canvas Group (Containers all standard Hub content for smooth fading) ──
     local canvas = Instance.new("CanvasGroup")
     canvas.Size = UDim2.new(1, 0, 1, 0)
     canvas.BackgroundTransparency = 1
@@ -275,34 +212,31 @@ function LiquidGlass:CreateWindow(config)
     canvas.ZIndex = 3
     canvas.GroupTransparency = 0
     canvas.Parent = winFrame
-    self._canvas = canvas
 
-    -- ── Header Area ──
     local header = Instance.new("Frame")
     header.Name = "Header"
-    header.BackgroundTransparency = 0.96
+    header.BackgroundTransparency = 0.97
     header.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     header.BorderSizePixel = 0
-    header.Size = UDim2.new(1, 0, 0, 46)
+    header.Size = UDim2.new(1, 0, 0, 44)
     header.ZIndex = 4
     header.Parent = canvas
 
     local headerBorder = Instance.new("Frame")
     headerBorder.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    headerBorder.BackgroundTransparency = 0.88
+    headerBorder.BackgroundTransparency = 0.9
     headerBorder.BorderSizePixel = 0
     headerBorder.Size = UDim2.new(1, 0, 0, 1)
     headerBorder.Position = UDim2.new(0, 0, 1, -1)
     headerBorder.ZIndex = 5
     headerBorder.Parent = header
 
-    -- Title & Subtitle
-    local titleContainer = Instance.new("Frame")
-    titleContainer.BackgroundTransparency = 1
-    titleContainer.Size = UDim2.new(0.6, 0, 1, 0)
-    titleContainer.Position = UDim2.new(0, 16, 0, 0)
-    titleContainer.ZIndex = 5
-    titleContainer.Parent = header
+    local titleGroup = Instance.new("Frame")
+    titleGroup.BackgroundTransparency = 1
+    titleGroup.Size = UDim2.new(0.6, 0, 1, 0)
+    titleGroup.Position = UDim2.new(0, 16, 0, 0)
+    titleGroup.ZIndex = 5
+    titleGroup.Parent = header
 
     local mainTitle = Instance.new("TextLabel")
     mainTitle.BackgroundTransparency = 1
@@ -311,10 +245,10 @@ function LiquidGlass:CreateWindow(config)
     mainTitle.Font = Enum.Font.GothamBold
     mainTitle.Text = self.Title
     mainTitle.TextColor3 = Theme.TextPrimary
-    mainTitle.TextSize = 15
+    mainTitle.TextSize = 14
     mainTitle.TextXAlignment = Enum.TextXAlignment.Left
     mainTitle.ZIndex = 5
-    mainTitle.Parent = titleContainer
+    mainTitle.Parent = titleGroup
 
     local subTitle = Instance.new("TextLabel")
     subTitle.BackgroundTransparency = 1
@@ -326,22 +260,20 @@ function LiquidGlass:CreateWindow(config)
     subTitle.TextSize = 10
     subTitle.TextXAlignment = Enum.TextXAlignment.Left
     subTitle.ZIndex = 5
-    subTitle.Parent = titleContainer
+    subTitle.Parent = titleGroup
 
-    -- Window Controls
     local controls = Instance.new("Frame")
     controls.BackgroundTransparency = 1
-    controls.Size = UDim2.new(0, 80, 1, 0)
-    controls.Position = UDim2.new(1, -90, 0, 0)
+    controls.Size = UDim2.new(0, 70, 1, 0)
+    controls.Position = UDim2.new(1, -80, 0, 0)
     controls.ZIndex = 5
     controls.Parent = header
 
     local closeBtn = Instance.new("TextButton")
-    closeBtn.Name = "Close"
     closeBtn.BackgroundColor3 = Theme.Danger
-    closeBtn.BackgroundTransparency = 0.2
-    closeBtn.Size = UDim2.new(0, 12, 0, 12)
-    closeBtn.Position = UDim2.new(1, -16, 0.5, -6)
+    closeBtn.BackgroundTransparency = 0.1
+    closeBtn.Size = UDim2.new(0, 11, 0, 11)
+    closeBtn.Position = UDim2.new(1, -16, 0.5, -5)
     closeBtn.Text = ""
     closeBtn.ZIndex = 6
     closeBtn.Parent = controls
@@ -351,11 +283,10 @@ function LiquidGlass:CreateWindow(config)
     closeCorner.Parent = closeBtn
 
     local minBtn = Instance.new("TextButton")
-    minBtn.Name = "Minimize"
     minBtn.BackgroundColor3 = Theme.Warning
-    minBtn.BackgroundTransparency = 0.2
-    minBtn.Size = UDim2.new(0, 12, 0, 12)
-    minBtn.Position = UDim2.new(1, -38, 0.5, -6)
+    minBtn.BackgroundTransparency = 0.1
+    minBtn.Size = UDim2.new(0, 11, 0, 11)
+    minBtn.Position = UDim2.new(1, -34, 0.5, -5)
     minBtn.Text = ""
     minBtn.ZIndex = 6
     minBtn.Parent = controls
@@ -364,20 +295,29 @@ function LiquidGlass:CreateWindow(config)
     minCorner.CornerRadius = UDim.new(1, 0)
     minCorner.Parent = minBtn
 
-    -- Header Dragging
-    Util.MakeDraggable(winFrame, header)
+    -- Header Drag Support (PC & Mobile)
+    local dragStart, startPos
+    SetupUnifiedDrag(header, function(mousePos)
+        dragStart = mousePos
+        startPos = winFrame.Position
+    end, function(mousePos)
+        local delta = mousePos - dragStart
+        winFrame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end)
 
-    -- ── Main Workspace split (Left Sidebar, Right Content) ──
     local workspaceFrame = Instance.new("Frame")
-    workspaceFrame.Name = "Workspace"
     workspaceFrame.BackgroundTransparency = 1
-    workspaceFrame.Size = UDim2.new(1, 0, 1, -46)
-    workspaceFrame.Position = UDim2.new(0, 0, 0, 46)
+    workspaceFrame.Size = UDim2.new(1, 0, 1, -44)
+    workspaceFrame.Position = UDim2.new(0, 0, 0, 44)
     workspaceFrame.ZIndex = 4
     workspaceFrame.Parent = canvas
 
     local sidebar = Instance.new("Frame")
-    sidebar.Name = "Sidebar"
     sidebar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     sidebar.BackgroundTransparency = 0.98
     sidebar.BorderSizePixel = 0
@@ -385,17 +325,16 @@ function LiquidGlass:CreateWindow(config)
     sidebar.ZIndex = 4
     sidebar.Parent = workspaceFrame
 
-    local sidebarBorderRight = Instance.new("Frame")
-    sidebarBorderRight.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    sidebarBorderRight.BackgroundTransparency = 0.88
-    sidebarBorderRight.BorderSizePixel = 0
-    sidebarBorderRight.Size = UDim2.new(0, 1, 1, 0)
-    sidebarBorderRight.Position = UDim2.new(1, -1, 0, 0)
-    sidebarBorderRight.ZIndex = 5
-    sidebarBorderRight.Parent = sidebar
+    local sidebarBorder = Instance.new("Frame")
+    sidebarBorder.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    sidebarBorder.BackgroundTransparency = 0.9
+    sidebarBorder.BorderSizePixel = 0
+    sidebarBorder.Size = UDim2.new(0, 1, 1, 0)
+    sidebarBorder.Position = UDim2.new(1, -1, 0, 0)
+    sidebarBorder.ZIndex = 5
+    sidebarBorder.Parent = sidebar
 
     local tabScroller = Instance.new("ScrollingFrame")
-    tabScroller.Name = "TabScroller"
     tabScroller.BackgroundTransparency = 1
     tabScroller.BorderSizePixel = 0
     tabScroller.Size = UDim2.new(1, -1, 1, 0)
@@ -409,9 +348,9 @@ function LiquidGlass:CreateWindow(config)
     tabListLayout.Parent = tabScroller
 
     local tabPad = Instance.new("UIPadding")
-    tabPad.PaddingLeft = UDim.new(0, 10)
-    tabPad.PaddingRight = UDim.new(0, 10)
-    tabPad.PaddingTop = UDim.new(0, 10)
+    tabPad.PaddingLeft = UDim.new(0, 8)
+    tabPad.PaddingRight = UDim.new(0, 8)
+    tabPad.PaddingTop = UDim.new(0, 8)
     tabPad.Parent = tabScroller
 
     local contentArea = Instance.new("Frame")
@@ -424,135 +363,95 @@ function LiquidGlass:CreateWindow(config)
     contentArea.Parent = workspaceFrame
     self._contentArea = contentArea
 
-    -- ── INTERACTIVE RESIZERS ──
-
-    -- Width Resizer (Left Border Slider)
+    -- Interactive resizer bars (Touch and Mouse compatible)
     local sidebarResizeHandle = Instance.new("Frame")
-    sidebarResizeHandle.Name = "SidebarResizer"
     sidebarResizeHandle.BackgroundTransparency = 1
-    sidebarResizeHandle.Size = UDim2.new(0, 6, 1, 0)
-    sidebarResizeHandle.Position = UDim2.new(1, -3, 0, 0)
+    sidebarResizeHandle.Size = UDim2.new(0, 8, 1, 0)
+    sidebarResizeHandle.Position = UDim2.new(1, -4, 0, 0)
     sidebarResizeHandle.ZIndex = 15
     sidebarResizeHandle.Parent = sidebar
 
-    -- Bottom-Right Window Resizer
     local sizeGrabber = Instance.new("ImageLabel")
-    sizeGrabber.Name = "ResizeGrabber"
     sizeGrabber.BackgroundTransparency = 1
-    sizeGrabber.Size = UDim2.new(0, 16, 0, 16)
-    sizeGrabber.Position = UDim2.new(1, -14, 1, -14)
-    sizeGrabber.Image = "rbxassetid://6031094030" -- Smooth gradient corner icon
+    sizeGrabber.Size = UDim2.new(0, 18, 0, 18)
+    sizeGrabber.Position = UDim2.new(1, -16, 1, -16)
+    sizeGrabber.Image = "rbxassetid://6031094030"
     sizeGrabber.ImageColor3 = Theme.TextMuted
     sizeGrabber.ZIndex = 10
     sizeGrabber.Parent = winFrame
 
-    local grabberBtn = Instance.new("TextButton")
-    grabberBtn.BackgroundTransparency = 1
-    grabberBtn.Size = UDim2.new(1, 0, 1, 0)
-    grabberBtn.Text = ""
-    grabberBtn.ZIndex = 11
-    grabberBtn.Parent = sizeGrabber
-
-    -- Resizing Logics
-    local activeWindowResizing = false
-    local activeSidebarResizing = false
     local rStartMouse, rStartWinSize, rStartShadowSize
+    SetupUnifiedDrag(sizeGrabber, function(mousePos)
+        rStartMouse = mousePos
+        rStartWinSize = winFrame.Size
+        rStartShadowSize = shadowFrame.Size
+    end, function(mousePos)
+        local delta = mousePos - rStartMouse
+        local nWidth = math.clamp(rStartWinSize.X.Offset + delta.X, 450, 900)
+        local nHeight = math.clamp(rStartWinSize.Y.Offset + delta.Y, 300, 650)
+        
+        winFrame.Size = UDim2.new(0, nWidth, 0, nHeight)
+        shadowFrame.Size = UDim2.new(0, nWidth + 30, 0, nHeight + 30)
+        shadowFrame.Position = UDim2.new(0.5, -(nWidth/2) - 15, 0.5, -(nHeight/2) - 15)
+        
+        contentArea.Size = UDim2.new(1, -self.SidebarWidth, 1, 0)
+    end)
+
     local sStartMouse, sStartWidth
-
-    grabberBtn.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            activeWindowResizing = true
-            rStartMouse = UserInputService:GetMouseLocation()
-            rStartWinSize = winFrame.Size
-            rStartShadowSize = shadowFrame.Size
-        end
+    SetupUnifiedDrag(sidebarResizeHandle, function(mousePos)
+        sStartMouse = mousePos
+        sStartWidth = sidebar.Size.X.Offset
+    end, function(mousePos)
+        local delta = mousePos - sStartMouse
+        local nWidth = math.clamp(sStartWidth + delta.X, 100, 200)
+        
+        self.SidebarWidth = nWidth
+        sidebar.Size = UDim2.new(0, nWidth, 1, 0)
+        contentArea.Size = UDim2.new(1, -nWidth, 1, 0)
+        contentArea.Position = UDim2.new(0, nWidth, 0, 0)
     end)
 
-    sidebarResizeHandle.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            activeSidebarResizing = true
-            sStartMouse = UserInputService:GetMouseLocation()
-            sStartWidth = sidebar.Size.X.Offset
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            local currentMouse = UserInputService:GetMouseLocation()
-            if activeWindowResizing then
-                local delta = currentMouse - rStartMouse
-                local nWidth = math.clamp(rStartWinSize.X.Offset + delta.X, 480, 900)
-                local nHeight = math.clamp(rStartWinSize.Y.Offset + delta.Y, 320, 650)
-                
-                winFrame.Size = UDim2.new(0, nWidth, 0, nHeight)
-                shadowFrame.Size = UDim2.new(0, nWidth + 30, 0, nHeight + 30)
-                shadowFrame.Position = UDim2.new(0.5, -(nWidth/2) - 15, 0.5, -(nHeight/2) - 15)
-            elseif activeSidebarResizing then
-                local delta = currentMouse - sStartMouse
-                local nWidth = math.clamp(sStartWidth + delta.X, 110, 220)
-                
-                self.SidebarWidth = nWidth
-                sidebar.Size = UDim2.new(0, nWidth, 1, 0)
-                contentArea.Size = UDim2.new(1, -nWidth, 1, 0)
-                contentArea.Position = UDim2.new(0, nWidth, 0, 0)
-            end
-        end
-    end)
-
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            activeWindowResizing = false
-            activeSidebarResizing = false
-        end
-    end)
-
-    -- ── Premium Minimization (Dynamic Island Morph) ──
     local originalSize, originalPos
 
     local function ToggleMinimize()
         self._minimized = not self._minimized
         if self._minimized then
-            -- Store previous position & size
             originalSize = winFrame.Size
             originalPos = winFrame.Position
 
-            -- Smooth fade standard canvas out
-            Util.Tween(canvas, { GroupTransparency = 1 }, 0.15)
-            Util.Tween(shadowFrame, { BackgroundTransparency = 1 }, 0.15)
+            SmoothTween(canvas, { GroupTransparency = 1 }, 0.15)
+            SmoothTween(shadowFrame, { BackgroundTransparency = 1 }, 0.15)
             task.delay(0.15, function()
                 canvas.Visible = false
                 shadowFrame.Visible = false
             end)
 
-            -- Morph Main Frame to Center Pill
-            Util.Tween(winFrame, {
+            SmoothTween(winFrame, {
                 Size = UDim2.new(0, 180, 0, 36),
                 Position = UDim2.new(0.5, -90, 0, 15),
                 BackgroundTransparency = 0.08
             }, 0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-            Util.Tween(winCorner, { CornerRadius = UDim.new(1, 0) }, 0.35)
+            SmoothTween(winCorner, { CornerRadius = UDim.new(1, 0) }, 0.35)
 
-            -- Display Dynamic Island overlay elements
             task.delay(0.2, function()
                 islandFrame.Size = UDim2.new(0, 180, 0, 36)
                 islandFrame.Position = UDim2.new(0.5, -90, 0, 15)
                 islandFrame.Visible = true
             end)
         else
-            -- Reverse Dynamic Island morph
             islandFrame.Visible = false
             canvas.Visible = true
             shadowFrame.Visible = true
 
-            Util.Tween(winFrame, {
+            SmoothTween(winFrame, {
                 Size = originalSize,
                 Position = originalPos,
                 BackgroundTransparency = 1 - Theme.GlassOpacity
             }, 0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-            Util.Tween(winCorner, { CornerRadius = UDim.new(0, 14) }, 0.35)
+            SmoothTween(winCorner, { CornerRadius = UDim.new(0, 14) }, 0.35)
 
-            Util.Tween(canvas, { GroupTransparency = 0 }, 0.3)
-            Util.Tween(shadowFrame, { BackgroundTransparency = 0.5 }, 0.3)
+            SmoothTween(canvas, { GroupTransparency = 0 }, 0.3)
+            SmoothTween(shadowFrame, { BackgroundTransparency = 0.55 }, 0.3)
         end
     end
 
@@ -560,65 +459,70 @@ function LiquidGlass:CreateWindow(config)
     islandFrame.MouseButton1Click:Connect(ToggleMinimize)
 
     closeBtn.MouseButton1Click:Connect(function()
-        Util.Tween(winFrame, { Size = UDim2.new(0, self.Width, 0, 0), BackgroundTransparency = 1 }, 0.25)
+        SmoothTween(winFrame, { Size = UDim2.new(0, self.Width, 0, 0), BackgroundTransparency = 1 }, 0.25)
         task.delay(0.3, function() gui:Destroy() end)
     end)
 
-    -- Opening Animation
     winFrame.Size = UDim2.new(0, self.Width, 0, 0)
     winFrame.BackgroundTransparency = 1
     canvas.GroupTransparency = 1
     shadowFrame.BackgroundTransparency = 1
 
-    Util.Tween(winFrame, {
+    SmoothTween(winFrame, {
         Size = UDim2.new(0, self.Width, 0, self.Height),
         BackgroundTransparency = 1 - Theme.GlassOpacity
     }, 0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-    Util.Tween(canvas, { GroupTransparency = 0 }, 0.45)
-    Util.Tween(shadowFrame, { BackgroundTransparency = 0.5 }, 0.45)
+    SmoothTween(canvas, { GroupTransparency = 0 }, 0.45)
+    SmoothTween(shadowFrame, { BackgroundTransparency = 0.55 }, 0.45)
 
     self._tabScroller = tabScroller
     return self
 end
 
--- ╔══════════════════════════════╗
--- ║         ADD TAB              ║
--- ╚══════════════════════════════╝
-function Window:AddTab(name, icon)
+function Window:AddTab(name, iconId)
     local tabData = { Name = name, Elements = {} }
 
-    -- Tab Selection Frame
     local tabBtn = Instance.new("TextButton")
-    tabBtn.Name = name .. "Tab"
     tabBtn.BackgroundColor3 = Theme.Accent
     tabBtn.BackgroundTransparency = 1
     tabBtn.BorderSizePixel = 0
-    tabBtn.Size = UDim2.new(1, 0, 0, 34)
+    tabBtn.Size = UDim2.new(1, 0, 0, 32)
     tabBtn.Font = Enum.Font.GothamSemibold
     tabBtn.Text = ""
     tabBtn.ZIndex = 6
     tabBtn.Parent = self._tabScroller
 
     local tabBtnCorner = Instance.new("UICorner")
-    tabBtnCorner.CornerRadius = UDim.new(0, 8)
+    tabBtnCorner.CornerRadius = UDim.new(0, 6)
     tabBtnCorner.Parent = tabBtn
 
-    -- Text inside selection
+    local offset = 8
+    if iconId then
+        local icon = Instance.new("ImageLabel")
+        icon.BackgroundTransparency = 1
+        icon.Size = UDim2.new(0, 14, 0, 14)
+        icon.Position = UDim2.new(0, 10, 0.5, -7)
+        icon.Image = iconId
+        icon.ImageColor3 = Theme.TextMuted
+        icon.ZIndex = 7
+        icon.Parent = tabBtn
+        tabData._icon = icon
+        offset = 30
+    end
+
     local tabLabel = Instance.new("TextLabel")
     tabLabel.BackgroundTransparency = 1
-    tabLabel.Size = UDim2.new(1, -12, 1, 0)
-    tabLabel.Position = UDim2.new(0, 12, 0, 0)
+    tabLabel.Size = UDim2.new(1, -offset, 1, 0)
+    tabLabel.Position = UDim2.new(0, offset, 0, 0)
     tabLabel.Font = Enum.Font.GothamSemibold
-    tabLabel.Text = (icon and icon .. "  " or "") .. name
+    tabLabel.Text = name
     tabLabel.TextColor3 = Theme.TextMuted
     tabLabel.TextSize = 12
     tabLabel.TextXAlignment = Enum.TextXAlignment.Left
     tabLabel.ZIndex = 7
     tabLabel.Parent = tabBtn
 
-    -- Page container
     local page = Instance.new("ScrollingFrame")
-    page.Name = name .. "Page"
     page.BackgroundTransparency = 1
     page.BorderSizePixel = 0
     page.Size = UDim2.new(1, 0, 1, 0)
@@ -633,12 +537,12 @@ function Window:AddTab(name, icon)
 
     local pageList = Instance.new("UIListLayout")
     pageList.SortOrder = Enum.SortOrder.LayoutOrder
-    pageList.Padding = UDim.new(0, 8)
+    pageList.Padding = UDim.new(0, 6)
     pageList.Parent = page
 
     local pagePad = Instance.new("UIPadding")
-    pagePad.PaddingLeft = UDim.new(0, 14)
-    pagePad.PaddingRight = UDim.new(0, 14)
+    pagePad.PaddingLeft = UDim.new(0, 12)
+    pagePad.PaddingRight = UDim.new(0, 12)
     pagePad.PaddingTop = UDim.new(0, 12)
     pagePad.PaddingBottom = UDim.new(0, 12)
     pagePad.Parent = page
@@ -647,18 +551,19 @@ function Window:AddTab(name, icon)
     tabData._label = tabLabel
     tabData._page = page
 
-    -- Premium Hover & Trigger animations
     tabBtn.MouseEnter:Connect(function()
         if self.ActiveTab ~= tabData then
-            Util.Tween(tabBtn, { BackgroundTransparency = 0.96 }, 0.15)
-            Util.Tween(tabLabel, { TextColor3 = Theme.TextSecondary }, 0.15)
+            SmoothTween(tabBtn, { BackgroundTransparency = 0.95 }, 0.15)
+            SmoothTween(tabLabel, { TextColor3 = Theme.TextSecondary }, 0.15)
+            if tabData._icon then SmoothTween(tabData._icon, { ImageColor3 = Theme.TextSecondary }, 0.15) end
         end
     end)
 
     tabBtn.MouseLeave:Connect(function()
         if self.ActiveTab ~= tabData then
-            Util.Tween(tabBtn, { BackgroundTransparency = 1 }, 0.15)
-            Util.Tween(tabLabel, { TextColor3 = Theme.TextMuted }, 0.15)
+            SmoothTween(tabBtn, { BackgroundTransparency = 1 }, 0.15)
+            SmoothTween(tabLabel, { TextColor3 = Theme.TextMuted }, 0.15)
+            if tabData._icon then SmoothTween(tabData._icon, { ImageColor3 = Theme.TextMuted }, 0.15) end
         end
     end)
 
@@ -671,16 +576,14 @@ function Window:AddTab(name, icon)
         self:_SwitchTab(tabData)
     end
 
-    -- Tab Element Constructors
     local Tab = {}
     Tab._page = page
     Tab._order = 0
 
-    -- ── SECTION ──
     function Tab:AddSection(text)
         local section = Instance.new("Frame")
         section.BackgroundTransparency = 1
-        section.Size = UDim2.new(1, 0, 0, 26)
+        section.Size = UDim2.new(1, 0, 0, 24)
         section.LayoutOrder = Tab._order
         Tab._order += 1
         section.Parent = page
@@ -697,13 +600,12 @@ function Window:AddTab(name, icon)
         label.Parent = section
     end
 
-    -- ── BUTTON ──
     function Tab:AddButton(config)
         config = config or {}
-        local btn, _ = MakeGlassFrame({
-            Size = UDim2.new(1, 0, 0, 38),
+        local btn, _ = BuildGlassFrame({
+            Size = UDim2.new(1, 0, 0, 36),
             Radius = UDim.new(0, 8),
-            ZIndex = 5,
+            ZIndex = 5
         })
         btn.LayoutOrder = Tab._order
         Tab._order += 1
@@ -729,10 +631,10 @@ function Window:AddTab(name, icon)
         click.Parent = btn
 
         click.MouseEnter:Connect(function()
-            Util.Tween(btn, { BackgroundTransparency = 0.84 }, 0.15)
+            SmoothTween(btn, { BackgroundTransparency = 0.85 }, 0.15)
         end)
         click.MouseLeave:Connect(function()
-            Util.Tween(btn, { BackgroundTransparency = 1 - Theme.GlassOpacity }, 0.15)
+            SmoothTween(btn, { BackgroundTransparency = 1 - Theme.GlassOpacity }, 0.15)
         end)
         click.MouseButton1Down:Connect(function()
             Util.Ripple(btn, Mouse.X, Mouse.Y)
@@ -745,15 +647,14 @@ function Window:AddTab(name, icon)
         return btn
     end
 
-    -- ── TOGGLE ──
     function Tab:AddToggle(config)
         config = config or {}
         local state = config.Default or false
 
-        local row, _ = MakeGlassFrame({
-            Size = UDim2.new(1, 0, 0, 40),
+        local row, _ = BuildGlassFrame({
+            Size = UDim2.new(1, 0, 0, 36),
             Radius = UDim.new(0, 8),
-            ZIndex = 5,
+            ZIndex = 5
         })
         row.LayoutOrder = Tab._order
         Tab._order += 1
@@ -770,24 +671,22 @@ function Window:AddTab(name, icon)
         label.ZIndex = 6
         label.Parent = row
 
-        -- Track
         local track = Instance.new("Frame")
         track.BackgroundColor3 = state and Theme.Accent or Color3.fromRGB(55, 60, 75)
         track.BorderSizePixel = 0
-        track.Size = UDim2.new(0, 34, 0, 18)
-        track.Position = UDim2.new(1, -48, 0.5, -9)
+        track.Size = UDim2.new(0, 32, 0, 16)
+        track.Position = UDim2.new(1, -46, 0.5, -8)
         track.ZIndex = 6
         local trackCorner = Instance.new("UICorner")
         trackCorner.CornerRadius = UDim.new(1, 0)
         trackCorner.Parent = track
         track.Parent = row
 
-        -- Thumb
         local thumb = Instance.new("Frame")
         thumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         thumb.BorderSizePixel = 0
-        thumb.Size = UDim2.new(0, 14, 0, 14)
-        thumb.Position = state and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
+        thumb.Size = UDim2.new(0, 12, 0, 12)
+        thumb.Position = state and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
         thumb.ZIndex = 7
         local thumbCorner = Instance.new("UICorner")
         thumbCorner.CornerRadius = UDim.new(1, 0)
@@ -802,12 +701,12 @@ function Window:AddTab(name, icon)
         click.Parent = row
 
         local function updateToggle()
-            Util.Tween(track, {
+            SmoothTween(track, {
                 BackgroundColor3 = state and Theme.Accent or Color3.fromRGB(55, 60, 75)
-            }, 0.22)
-            Util.Tween(thumb, {
-                Position = state and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
-            }, 0.22)
+            }, 0.2)
+            SmoothTween(thumb, {
+                Position = state and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
+            }, 0.2)
         end
 
         click.MouseButton1Click:Connect(function()
@@ -823,22 +722,21 @@ function Window:AddTab(name, icon)
                 updateToggle()
                 if config.Callback then pcall(config.Callback, state) end
             end,
-            Get = function() return state end,
+            Get = function() return state end
         }
     end
 
-    -- ── SLIDER ──
     function Tab:AddSlider(config)
         config = config or {}
-        local min   = config.Min   or 0
-        local max   = config.Max   or 100
+        local min = config.Min or 0
+        local max = config.Max or 100
         local value = config.Value or min
         local suffix = config.Suffix or ""
 
-        local container, _ = MakeGlassFrame({
-            Size = UDim2.new(1, 0, 0, 52),
+        local container, _ = BuildGlassFrame({
+            Size = UDim2.new(1, 0, 0, 48),
             Radius = UDim.new(0, 8),
-            ZIndex = 5,
+            ZIndex = 5
         })
         container.LayoutOrder = Tab._order
         Tab._order += 1
@@ -846,7 +744,7 @@ function Window:AddTab(name, icon)
         local label = Instance.new("TextLabel")
         label.BackgroundTransparency = 1
         label.Size = UDim2.new(1, -80, 0, 20)
-        label.Position = UDim2.new(0, 14, 0, 6)
+        label.Position = UDim2.new(0, 14, 0, 4)
         label.Font = Enum.Font.GothamSemibold
         label.Text = config.Text or "Slider"
         label.TextColor3 = Theme.TextPrimary
@@ -858,7 +756,7 @@ function Window:AddTab(name, icon)
         local valLabel = Instance.new("TextLabel")
         valLabel.BackgroundTransparency = 1
         valLabel.Size = UDim2.new(0, 70, 0, 20)
-        valLabel.Position = UDim2.new(1, -84, 0, 6)
+        valLabel.Position = UDim2.new(1, -84, 0, 4)
         valLabel.Font = Enum.Font.GothamBold
         valLabel.Text = value .. suffix
         valLabel.TextColor3 = Theme.Accent
@@ -867,11 +765,10 @@ function Window:AddTab(name, icon)
         valLabel.ZIndex = 6
         valLabel.Parent = container
 
-        -- Track & Fill
         local track = Instance.new("Frame")
         track.BackgroundColor3 = Color3.fromRGB(50, 55, 70)
         track.Size = UDim2.new(1, -28, 0, 4)
-        track.Position = UDim2.new(0, 14, 1, -16)
+        track.Position = UDim2.new(0, 14, 1, -14)
         track.BorderSizePixel = 0
         track.ZIndex = 6
         track.Parent = container
@@ -891,7 +788,6 @@ function Window:AddTab(name, icon)
         fillCorner.CornerRadius = UDim.new(1, 0)
         fillCorner.Parent = fill
 
-        -- Active Handle Drag
         local thumb = Instance.new("Frame")
         thumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         thumb.Size = UDim2.new(0, 10, 0, 10)
@@ -903,7 +799,6 @@ function Window:AddTab(name, icon)
         thumbCorner.CornerRadius = UDim.new(1, 0)
         thumbCorner.Parent = thumb
 
-        local dragging = false
         local function updateSlider(inputX)
             local ratio = math.clamp((inputX - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
             value = math.floor(min + (max - min) * ratio)
@@ -913,22 +808,16 @@ function Window:AddTab(name, icon)
             if config.Callback then pcall(config.Callback, value) end
         end
 
-        thumb.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                dragging = true
-            end
+        SetupUnifiedDrag(track, function(mousePos)
+            updateSlider(mousePos.X)
+        end, function(mousePos)
+            updateSlider(mousePos.X)
         end)
 
-        UserInputService.InputChanged:Connect(function(input)
-            if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-                updateSlider(input.Position.X)
-            end
-        end)
-
-        UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                dragging = false
-            end
+        SetupUnifiedDrag(thumb, function(mousePos)
+            updateSlider(mousePos.X)
+        end, function(mousePos)
+            updateSlider(mousePos.X)
         end)
 
         container.Parent = page
@@ -940,29 +829,30 @@ function Window:AddTab(name, icon)
                 fill.Size = UDim2.new(ratio, 0, 1, 0)
                 thumb.Position = UDim2.new(ratio, -5, 0.5, -5)
                 valLabel.Text = val .. suffix
+                if config.Callback then pcall(config.Callback, val) end
             end,
-            Get = function() return value end,
+            Get = function() return value end
         }
     end
 
-    -- ── DROPDOWN ──
     function Tab:AddDropdown(config)
         config = config or {}
         local options = config.Options or {}
         local selected = config.Default or (options[1] or "Select...")
         local isOpen = false
 
-        local container, _ = MakeGlassFrame({
-            Size = UDim2.new(1, 0, 0, 38),
+        -- Layout integration (extends height inline dynamically)
+        local container, _ = BuildGlassFrame({
+            Size = UDim2.new(1, 0, 0, 36),
             Radius = UDim.new(0, 8),
-            ZIndex = 5,
+            ZIndex = 5
         })
         container.LayoutOrder = Tab._order
         Tab._order += 1
 
         local label = Instance.new("TextLabel")
         label.BackgroundTransparency = 1
-        label.Size = UDim2.new(0.5, 0, 1, 0)
+        label.Size = UDim2.new(0.5, 0, 0, 36)
         label.Position = UDim2.new(0, 14, 0, 0)
         label.Font = Enum.Font.GothamSemibold
         label.Text = config.Text or "Dropdown"
@@ -976,7 +866,7 @@ function Window:AddTab(name, icon)
         trigger.BackgroundColor3 = Color3.fromRGB(45, 50, 65)
         trigger.BorderSizePixel = 0
         trigger.Size = UDim2.new(0.45, 0, 0, 24)
-        trigger.Position = UDim2.new(0.55, -14, 0.5, -12)
+        trigger.Position = UDim2.new(0.55, -14, 0, 6)
         trigger.Font = Enum.Font.GothamSemibold
         trigger.Text = selected .. "  ▾"
         trigger.TextColor3 = Theme.TextSecondary
@@ -988,23 +878,20 @@ function Window:AddTab(name, icon)
         trigCorner.CornerRadius = UDim.new(0, 6)
         trigCorner.Parent = trigger
 
-        -- Dropdown Drawer Panel
-        local drawer, _ = MakeGlassFrame({
-            Size = UDim2.new(0.45, 0, 0, 0),
-            Position = UDim2.new(0.55, -14, 1, 2),
-            Radius = UDim.new(0, 6),
-            ZIndex = 20,
-        })
-        drawer.Visible = false
-        drawer.ClipsDescendants = true
-        drawer.Parent = container
+        local listHolder = Instance.new("Frame")
+        listHolder.BackgroundTransparency = 1
+        listHolder.Position = UDim2.new(0, 0, 0, 36)
+        listHolder.Size = UDim2.new(1, 0, 1, -36)
+        listHolder.ClipsDescendants = true
+        listHolder.ZIndex = 6
+        listHolder.Parent = container
 
-        local drawerList = Instance.new("UIListLayout")
-        drawerList.SortOrder = Enum.SortOrder.LayoutOrder
-        drawerList.Parent = drawer
+        local holderLayout = Instance.new("UIListLayout")
+        holderLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        holderLayout.Parent = listHolder
 
-        local function rebuildDrawer()
-            for _, c in ipairs(drawer:GetChildren()) do
+        local function rebuildList()
+            for _, c in ipairs(listHolder:GetChildren()) do
                 if c:IsA("TextButton") then c:Destroy() end
             end
 
@@ -1018,16 +905,15 @@ function Window:AddTab(name, icon)
                 optBtn.Text = value
                 optBtn.TextColor3 = (value == selected) and Theme.Accent or Theme.TextSecondary
                 optBtn.TextSize = 11
-                optBtn.ZIndex = 21
-                optBtn.Parent = drawer
+                optBtn.ZIndex = 7
+                optBtn.Parent = listHolder
 
                 optBtn.MouseButton1Click:Connect(function()
                     selected = value
                     trigger.Text = value .. "  ▾"
                     isOpen = false
-                    Util.Tween(drawer, { Size = UDim2.new(0.45, 0, 0, 0) }, 0.15)
-                    task.delay(0.15, function() drawer.Visible = false end)
-                    rebuildDrawer()
+                    SmoothTween(container, { Size = UDim2.new(1, 0, 0, 36) }, 0.2)
+                    rebuildList()
                     if config.Callback then pcall(config.Callback, value) end
                 end)
             end
@@ -1036,12 +922,11 @@ function Window:AddTab(name, icon)
         trigger.MouseButton1Click:Connect(function()
             isOpen = not isOpen
             if isOpen then
-                rebuildDrawer()
-                drawer.Visible = true
-                Util.Tween(drawer, { Size = UDim2.new(0.45, 0, 0, #options * 28) }, 0.2, Enum.EasingStyle.Quint)
+                rebuildList()
+                local targetHeight = 36 + (#options * 28)
+                SmoothTween(container, { Size = UDim2.new(1, 0, 0, targetHeight) }, 0.25, Enum.EasingStyle.Quint)
             else
-                Util.Tween(drawer, { Size = UDim2.new(0.45, 0, 0, 0) }, 0.15)
-                task.delay(0.15, function() drawer.Visible = false end)
+                SmoothTween(container, { Size = UDim2.new(1, 0, 0, 36) }, 0.2)
             end
         end)
 
@@ -1051,22 +936,21 @@ function Window:AddTab(name, icon)
             Set = function(_, val)
                 selected = val
                 trigger.Text = val .. "  ▾"
-                rebuildDrawer()
+                rebuildList()
             end,
             Refresh = function(_, newOpts)
                 options = newOpts
-                rebuildDrawer()
-            end,
+                rebuildList()
+            end
         }
     end
 
-    -- ── INPUT ──
     function Tab:AddInput(config)
         config = config or {}
-        local container, _ = MakeGlassFrame({
-            Size = UDim2.new(1, 0, 0, 52),
+        local container, _ = BuildGlassFrame({
+            Size = UDim2.new(1, 0, 0, 48),
             Radius = UDim.new(0, 8),
-            ZIndex = 5,
+            ZIndex = 5
         })
         container.LayoutOrder = Tab._order
         Tab._order += 1
@@ -1074,7 +958,7 @@ function Window:AddTab(name, icon)
         local label = Instance.new("TextLabel")
         label.BackgroundTransparency = 1
         label.Size = UDim2.new(1, -14, 0, 16)
-        label.Position = UDim2.new(0, 14, 0, 6)
+        label.Position = UDim2.new(0, 14, 0, 4)
         label.Font = Enum.Font.GothamSemibold
         label.Text = config.Text or "Input"
         label.TextColor3 = Theme.TextSecondary
@@ -1086,8 +970,8 @@ function Window:AddTab(name, icon)
         local box = Instance.new("TextBox")
         box.BackgroundColor3 = Color3.fromRGB(40, 45, 60)
         box.BackgroundTransparency = 0.4
-        box.Size = UDim2.new(1, -28, 0, 22)
-        box.Position = UDim2.new(0, 14, 1, -26)
+        box.Size = UDim2.new(1, -28, 0, 20)
+        box.Position = UDim2.new(0, 14, 1, -24)
         box.Font = Enum.Font.Gotham
         box.PlaceholderText = config.Placeholder or "Write here..."
         box.PlaceholderColor3 = Theme.TextMuted
@@ -1099,11 +983,11 @@ function Window:AddTab(name, icon)
         box.Parent = container
 
         local boxPad = Instance.new("UIPadding")
-        boxPad.PaddingLeft = UDim.new(0, 8)
+        boxPad.PaddingLeft = UDim.new(0, 6)
         boxPad.Parent = box
 
         local boxCorner = Instance.new("UICorner")
-        boxCorner.CornerRadius = UDim.new(0, 6)
+        boxCorner.CornerRadius = UDim.new(0, 5)
         boxCorner.Parent = box
 
         box.FocusLost:Connect(function(entered)
@@ -1113,20 +997,19 @@ function Window:AddTab(name, icon)
         container.Parent = page
         return {
             Get = function() return box.Text end,
-            Set = function(_, txt) box.Text = txt end,
+            Set = function(_, txt) box.Text = txt end
         }
     end
 
-    -- ── KEYBIND ──
     function Tab:AddKeybind(config)
         config = config or {}
         local key = config.Default or Enum.KeyCode.Unknown
         local listening = false
 
-        local row, _ = MakeGlassFrame({
-            Size = UDim2.new(1, 0, 0, 38),
+        local row, _ = BuildGlassFrame({
+            Size = UDim2.new(1, 0, 0, 36),
             Radius = UDim.new(0, 8),
-            ZIndex = 5,
+            ZIndex = 5
         })
         row.LayoutOrder = Tab._order
         Tab._order += 1
@@ -1183,27 +1066,26 @@ function Window:AddTab(name, icon)
 
         row.Parent = page
         return {
-            Get = function() return key end,
+            Get = function() return key end
         }
     end
 
-    -- ── COLOR PICKER ──
     function Tab:AddColorPicker(config)
         config = config or {}
         local color = config.Default or Color3.fromRGB(120, 180, 255)
         local isOpen = false
 
-        local container, _ = MakeGlassFrame({
-            Size = UDim2.new(1, 0, 0, 38),
+        local container, _ = BuildGlassFrame({
+            Size = UDim2.new(1, 0, 0, 36),
             Radius = UDim.new(0, 8),
-            ZIndex = 5,
+            ZIndex = 5
         })
         container.LayoutOrder = Tab._order
         Tab._order += 1
 
         local label = Instance.new("TextLabel")
         label.BackgroundTransparency = 1
-        label.Size = UDim2.new(1, -70, 1, 0)
+        label.Size = UDim2.new(1, -70, 0, 36)
         label.Position = UDim2.new(0, 14, 0, 0)
         label.Font = Enum.Font.GothamSemibold
         label.Text = config.Text or "Color Picker"
@@ -1217,7 +1099,7 @@ function Window:AddTab(name, icon)
         swatch.BackgroundColor3 = color
         swatch.BorderSizePixel = 0
         swatch.Size = UDim2.new(0, 32, 0, 20)
-        swatch.Position = UDim2.new(1, -46, 0.5, -10)
+        swatch.Position = UDim2.new(1, -46, 0, 8)
         swatch.Text = ""
         swatch.ZIndex = 6
         swatch.Parent = container
@@ -1226,61 +1108,115 @@ function Window:AddTab(name, icon)
         swatchCorner.CornerRadius = UDim.new(0, 5)
         swatchCorner.Parent = swatch
 
-        -- Inline Color picker layout
-        local tray, _ = MakeGlassFrame({
-            Size = UDim2.new(1, 0, 0, 0),
-            Position = UDim2.new(0, 0, 1, 4),
-            Radius = UDim.new(0, 8),
-            ZIndex = 15,
-        })
-        tray.Visible = false
+        -- Expanding paint picker tray
+        local tray = Instance.new("Frame")
+        tray.BackgroundTransparency = 1
+        tray.Position = UDim2.new(0, 0, 0, 36)
+        tray.Size = UDim2.new(1, 0, 0, 0)
         tray.ClipsDescendants = true
+        tray.ZIndex = 6
         tray.Parent = container
 
-        local gridLayout = Instance.new("UIGridLayout")
-        gridLayout.CellSize = UDim2.new(0, 22, 0, 22)
-        gridLayout.CellPadding = UDim2.new(0, 6, 0, 6)
-        gridLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        gridLayout.Parent = tray
+        -- Color wheel / Spectrum panel [415583266] (Universal Roblox Palette ID)
+        local palette = Instance.new("ImageLabel")
+        palette.Size = UDim2.new(0, 120, 0, 100)
+        palette.Position = UDim2.new(0, 14, 0, 10)
+        palette.Image = "rbxassetid://415583266"
+        palette.BorderSizePixel = 0
+        palette.ZIndex = 7
+        palette.Parent = tray
 
-        local pad = Instance.new("UIPadding")
-        pad.PaddingLeft = UDim.new(0, 14)
-        pad.PaddingTop = UDim.new(0, 10)
-        pad.Parent = tray
+        local paletteCorner = Instance.new("UICorner")
+        paletteCorner.CornerRadius = UDim.new(0, 6)
+        paletteCorner.Parent = palette
 
-        local presets = {
-            Color3.fromRGB(120, 180, 255), Color3.fromRGB(100, 220, 160),
-            Color3.fromRGB(255, 190, 80),  Color3.fromRGB(255, 90, 100),
-            Color3.fromRGB(200, 120, 255), Color3.fromRGB(255, 255, 255),
-            Color3.fromRGB(140, 150, 170), Color3.fromRGB(60, 65, 80)
-        }
+        local selectorNode = Instance.new("Frame")
+        selectorNode.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        selectorNode.Size = UDim2.new(0, 8, 0, 8)
+        selectorNode.Position = UDim2.new(0.5, -4, 0.5, -4)
+        selectorNode.ZIndex = 8
+        selectorNode.Parent = palette
 
-        for i, col in ipairs(presets) do
-            local p = Instance.new("TextButton")
-            p.BackgroundColor3 = col
-            p.Text = ""
-            p.ZIndex = 16
-            p.Parent = tray
+        local selectorCorner = Instance.new("UICorner")
+        selectorCorner.CornerRadius = UDim.new(1, 0)
+        selectorCorner.Parent = selectorNode
+
+        -- Lightness/Darkness Slider
+        local valSlider = Instance.new("Frame")
+        valSlider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        valSlider.Size = UDim2.new(1, -164, 0, 12)
+        valSlider.Position = UDim2.new(0, 150, 0, 20)
+        valSlider.ZIndex = 7
+        valSlider.Parent = tray
+
+        local valCorner = Instance.new("UICorner")
+        valCorner.CornerRadius = UDim.new(1, 0)
+        valCorner.Parent = valSlider
+
+        local valGradient = Instance.new("UIGradient")
+        valGradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 0)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255))
+        })
+        valGradient.Parent = valSlider
+
+        local valCursor = Instance.new("Frame")
+        valCursor.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        valCursor.Size = UDim2.new(0, 6, 0, 16)
+        valCursor.Position = UDim2.new(1, -3, 0.5, -8)
+        valCursor.ZIndex = 8
+        valCursor.Parent = valSlider
+
+        local valCursorCorner = Instance.new("UICorner")
+        valCursorCorner.CornerRadius = UDim.new(1, 0)
+        valCursorCorner.Parent = valCursor
+
+        local value_H, value_S, value_V = color:ToHSV()
+
+        local function updatePaletteColor(mouseX, mouseY)
+            local relX = math.clamp((mouseX - palette.AbsolutePosition.X) / palette.AbsoluteSize.X, 0, 1)
+            local relY = math.clamp((mouseY - palette.AbsolutePosition.Y) / palette.AbsoluteSize.Y, 0, 1)
+            selectorNode.Position = UDim2.new(relX, -4, relY, -4)
             
-            local pc = Instance.new("UICorner")
-            pc.CornerRadius = UDim.new(0, 4)
-            pc.Parent = p
-
-            p.MouseButton1Click:Connect(function()
-                color = col
-                swatch.BackgroundColor3 = col
-                if config.Callback then pcall(config.Callback, col) end
-            end)
+            value_H = 1 - relX
+            value_S = 1 - relY
+            
+            color = Color3.fromHSV(value_H, value_S, value_V)
+            swatch.BackgroundColor3 = color
+            if config.Callback then pcall(config.Callback, color) end
         end
+
+        local function updateLightness(mouseX)
+            local relX = math.clamp((mouseX - valSlider.AbsolutePosition.X) / valSlider.AbsoluteSize.X, 0, 1)
+            valCursor.Position = UDim2.new(relX, -3, 0.5, -8)
+            
+            value_V = relX
+            
+            color = Color3.fromHSV(value_H, value_S, value_V)
+            swatch.BackgroundColor3 = color
+            if config.Callback then pcall(config.Callback, color) end
+        end
+
+        SetupUnifiedDrag(palette, function(pos)
+            updatePaletteColor(pos.X, pos.Y)
+        end, function(pos)
+            updatePaletteColor(pos.X, pos.Y)
+        end)
+
+        SetupUnifiedDrag(valSlider, function(pos)
+            updateLightness(pos.X)
+        end, function(pos)
+            updateLightness(pos.X)
+        end)
 
         swatch.MouseButton1Click:Connect(function()
             isOpen = not isOpen
             if isOpen then
-                tray.Visible = true
-                Util.Tween(tray, { Size = UDim2.new(1, 0, 0, 46) }, 0.2, Enum.EasingStyle.Quint)
+                SmoothTween(container, { Size = UDim2.new(1, 0, 0, 156) }, 0.25, Enum.EasingStyle.Quint)
+                SmoothTween(tray, { Size = UDim2.new(1, 0, 0, 120) }, 0.25, Enum.EasingStyle.Quint)
             else
-                Util.Tween(tray, { Size = UDim2.new(1, 0, 0, 0) }, 0.15)
-                task.delay(0.15, function() tray.Visible = false end)
+                SmoothTween(container, { Size = UDim2.new(1, 0, 0, 36) }, 0.2)
+                SmoothTween(tray, { Size = UDim2.new(1, 0, 0, 0) }, 0.2)
             end
         end)
 
@@ -1290,38 +1226,39 @@ function Window:AddTab(name, icon)
             Set = function(_, col)
                 color = col
                 swatch.BackgroundColor3 = col
+                value_H, value_S, value_V = col:ToHSV()
+                selectorNode.Position = UDim2.new(1 - value_H, -4, 1 - value_S, -4)
+                valCursor.Position = UDim2.new(value_V, -3, 0.5, -8)
                 if config.Callback then pcall(config.Callback, col) end
-            end,
+            end
         }
     end
 
     return Tab
 end
 
--- ── Internal Tab Swapper ──
 function Window:_SwitchTab(tabData)
     if self.ActiveTab then
         self.ActiveTab._page.Visible = false
-        Util.Tween(self.ActiveTab._btn, { BackgroundTransparency = 1 }, 0.2)
-        Util.Tween(self.ActiveTab._label, { TextColor3 = Theme.TextMuted }, 0.2)
+        SmoothTween(self.ActiveTab._btn, { BackgroundTransparency = 1 }, 0.2)
+        SmoothTween(self.ActiveTab._label, { TextColor3 = Theme.TextMuted }, 0.2)
+        if self.ActiveTab._icon then SmoothTween(self.ActiveTab._icon, { ImageColor3 = Theme.TextMuted }, 0.2) end
     end
     self.ActiveTab = tabData
     tabData._page.Visible = true
-    Util.Tween(tabData._btn, { BackgroundTransparency = 0.88 }, 0.2)
-    Util.Tween(tabData._label, { TextColor3 = Theme.TextPrimary }, 0.2)
+    SmoothTween(tabData._btn, { BackgroundTransparency = 0.88 }, 0.2)
+    SmoothTween(tabData._label, { TextColor3 = Theme.TextPrimary }, 0.2)
+    if tabData._icon then SmoothTween(tabData._icon, { ImageColor3 = Theme.TextPrimary }, 0.2) end
 end
 
--- ╔══════════════════════════════╗
--- ║      NOTIFICATION SYSTEM     ║
--- ╚══════════════════════════════╝
 local notifyContainer = nil
 
 function LiquidGlass.Notify(config)
     config = config or {}
-    local title    = config.Title    or "System Alert"
-    local message  = config.Message  or ""
+    local title = config.Title or "Notification"
+    local message = config.Message or ""
     local duration = config.Duration or 3.5
-    local ntype    = config.Type     or "info"
+    local ntype = config.Type or "info"
 
     if not notifyContainer or not notifyContainer.Parent then
         local gui = Instance.new("ScreenGui")
@@ -1334,37 +1271,36 @@ function LiquidGlass.Notify(config)
 
         notifyContainer = Instance.new("Frame")
         notifyContainer.BackgroundTransparency = 1
-        notifyContainer.Size = UDim2.new(0, 280, 1, 0)
-        notifyContainer.Position = UDim2.new(1, -294, 0, 0)
+        notifyContainer.Size = UDim2.new(0, 260, 1, 0)
+        notifyContainer.Position = UDim2.new(1, -274, 0, 0)
         notifyContainer.ZIndex = 100
         notifyContainer.Parent = gui
 
         local list = Instance.new("UIListLayout")
         list.SortOrder = Enum.SortOrder.LayoutOrder
         list.VerticalAlignment = Enum.VerticalAlignment.Bottom
-        list.Padding = UDim.new(0, 8)
+        list.Padding = UDim.new(0, 6)
         list.Parent = notifyContainer
 
         local pad = Instance.new("UIPadding")
-        pad.PaddingBottom = UDim.new(0, 16)
+        pad.PaddingBottom = UDim.new(0, 14)
         pad.Parent = notifyContainer
     end
 
     local typeColors = {
-        info    = Theme.Accent,
+        info = Theme.Accent,
         success = Theme.Success,
         warning = Theme.Warning,
-        danger  = Theme.Danger,
+        danger = Theme.Danger
     }
     local statusColor = typeColors[ntype] or Theme.Accent
 
-    local card, _ = MakeGlassFrame({
-        Size = UDim2.new(1, 0, 0, 64),
-        Radius = UDim.new(0, 10),
-        ZIndex = 101,
+    local card, _ = BuildGlassFrame({
+        Size = UDim2.new(1, 0, 0, 58),
+        Radius = UDim.new(0, 8),
+        ZIndex = 101
     })
-    card.Name = "Notification"
-    card.BackgroundTransparency = 0.08
+    card.BackgroundTransparency = 0.1
     card.ClipsDescendants = true
 
     local indicator = Instance.new("Frame")
@@ -1376,24 +1312,24 @@ function LiquidGlass.Notify(config)
 
     local ttl = Instance.new("TextLabel")
     ttl.BackgroundTransparency = 1
-    ttl.Size = UDim2.new(1, -24, 0, 20)
-    ttl.Position = UDim2.new(0, 12, 0, 8)
+    ttl.Size = UDim2.new(1, -24, 0, 18)
+    ttl.Position = UDim2.new(0, 12, 0, 6)
     ttl.Font = Enum.Font.GothamBold
     ttl.Text = title
     ttl.TextColor3 = statusColor
-    ttl.TextSize = 12
+    ttl.TextSize = 11
     ttl.TextXAlignment = Enum.TextXAlignment.Left
     ttl.ZIndex = 102
     ttl.Parent = card
 
     local msg = Instance.new("TextLabel")
     msg.BackgroundTransparency = 1
-    msg.Size = UDim2.new(1, -24, 0, 28)
-    msg.Position = UDim2.new(0, 12, 0, 26)
+    msg.Size = UDim2.new(1, -24, 0, 24)
+    msg.Position = UDim2.new(0, 12, 0, 24)
     msg.Font = Enum.Font.Gotham
     msg.Text = message
     msg.TextColor3 = Theme.TextSecondary
-    msg.TextSize = 11
+    msg.TextSize = 10
     msg.TextWrapped = true
     msg.TextXAlignment = Enum.TextXAlignment.Left
     msg.ZIndex = 102
@@ -1411,11 +1347,11 @@ function LiquidGlass.Notify(config)
     card.Position = UDim2.new(1, 20, 0, 0)
     card.Parent = notifyContainer
 
-    Util.Tween(card, { Position = UDim2.new(0, 0, 0, 0) }, 0.35, Enum.EasingStyle.Back)
-    Util.Tween(prog, { Size = UDim2.new(0, 0, 0, 2) }, duration, Enum.EasingStyle.Linear)
+    SmoothTween(card, { Position = UDim2.new(0, 0, 0, 0) }, 0.35, Enum.EasingStyle.Back)
+    SmoothTween(prog, { Size = UDim2.new(0, 0, 0, 2) }, duration, Enum.EasingStyle.Linear)
 
     task.delay(duration, function()
-        Util.Tween(card, { Position = UDim2.new(1, 20, 0, 0), BackgroundTransparency = 1 }, 0.3)
+        SmoothTween(card, { Position = UDim2.new(1, 20, 0, 0), BackgroundTransparency = 1 }, 0.3)
         task.delay(0.3, function() card:Destroy() end)
     end)
 end
