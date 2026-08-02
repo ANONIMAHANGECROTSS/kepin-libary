@@ -10,7 +10,7 @@ local Lighting = game:GetService("Lighting")
 
 local LocalPlayer = Players.LocalPlayer
 
--- Setup Custom Font
+-- Setup Custom Font (Rubik Wet Paint)
 local CustomFont = Font.new("rbxassetid://12187369046", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
 
 local Theme = {
@@ -121,7 +121,7 @@ local function BuildGlassFrame(props)
     return frame
 end
 
--- Floating Dropdown System (Mencegah text timpa dan masalah UI Clip)
+-- Floating Dropdown System
 local function CreateFloatingDropdown(parentGui, trigger, options, default, useSearch, callback)
     local selected = default or (options[1] or "Select...")
     local isOpen = false
@@ -151,7 +151,6 @@ local function CreateFloatingDropdown(parentGui, trigger, options, default, useS
         if isOpen then return end
         isOpen = true
 
-        -- Tombol transparan untuk menutup dropdown jika klik di luar
         closeBtn = Instance.new("TextButton")
         closeBtn.Size = UDim2.new(1, 0, 1, 0)
         closeBtn.Position = UDim2.new(0, 0, 0, 0)
@@ -161,7 +160,6 @@ local function CreateFloatingDropdown(parentGui, trigger, options, default, useS
         closeBtn.Parent = parentGui
         closeBtn.MouseButton1Click:Connect(closeDropdown)
 
-        -- Wadah Dropdown Melayang
         floatingFrame = Instance.new("CanvasGroup")
         floatingFrame.Size = UDim2.new(0, trigger.AbsoluteSize.X, 0, 0)
         floatingFrame.Position = UDim2.new(0, trigger.AbsolutePosition.X, 0, trigger.AbsolutePosition.Y + trigger.AbsoluteSize.Y + 6)
@@ -187,7 +185,7 @@ local function CreateFloatingDropdown(parentGui, trigger, options, default, useS
             searchBox.Position = UDim2.new(0, 6, 0, 6)
             searchBox.BackgroundColor3 = Theme.ElementSurface
             searchBox.BackgroundTransparency = 0.2
-            searchBox.Font = Theme.FontRegular
+            searchBox.FontFace = Theme.FontRegular
             searchBox.PlaceholderText = "🔍 Search..."
             searchBox.PlaceholderColor3 = Theme.TextMuted
             searchBox.TextColor3 = Theme.TextPrimary
@@ -248,7 +246,7 @@ local function CreateFloatingDropdown(parentGui, trigger, options, default, useS
                     optBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                     optBtn.BackgroundTransparency = 1
                     optBtn.Size = UDim2.new(1, 0, 0, 30)
-                    optBtn.Font = Theme.FontRegular
+                    optBtn.FontFace = Theme.FontRegular
                     optBtn.Text = value
                     optBtn.TextColor3 = (value == selected) and Theme.Accent or Theme.TextSecondary
                     optBtn.TextSize = 12
@@ -286,7 +284,6 @@ local function CreateFloatingDropdown(parentGui, trigger, options, default, useS
         rebuildList()
         SmoothTween(floatingFrame, {GroupTransparency = 0}, 0.25)
 
-        -- Update posisi dropdown secara real-time agar selalu menempel di tombol (jika UI digeser)
         renderConn = RunService.RenderStepped:Connect(function()
             if not trigger.Parent or not trigger.Parent.Parent then
                 closeDropdown()
@@ -412,7 +409,7 @@ function LiquidGlass:CreateWindow(config)
     islandTitle.BackgroundTransparency = 1
     islandTitle.Size = UDim2.new(1, -34, 1, 0)
     islandTitle.Position = UDim2.new(0, 26, 0, 0)
-    islandTitle.Font = Theme.FontBold
+    islandTitle.FontFace = Theme.FontBold
     islandTitle.Text = self.Title .. " | " .. self.Executor
     islandTitle.TextColor3 = Theme.TextPrimary
     islandTitle.TextSize = 12
@@ -453,7 +450,7 @@ function LiquidGlass:CreateWindow(config)
     local mainTitle = Instance.new("TextLabel")
     mainTitle.BackgroundTransparency = 1
     mainTitle.Size = UDim2.new(1, 0, 1, 0)
-    mainTitle.Font = Theme.FontBold
+    mainTitle.FontFace = Theme.FontBold
     mainTitle.Text = self.Title
     mainTitle.TextColor3 = Theme.TextPrimary
     mainTitle.TextSize = 16
@@ -465,7 +462,7 @@ function LiquidGlass:CreateWindow(config)
     versionTag.BackgroundColor3 = Theme.Accent
     versionTag.Size = UDim2.new(0, 38, 0, 20)
     versionTag.Position = UDim2.new(0, 118, 0.5, -10)
-    versionTag.Font = Theme.FontBold
+    versionTag.FontFace = Theme.FontBold
     versionTag.Text = self.Subtitle
     versionTag.TextColor3 = Theme.TextPrimary
     versionTag.TextSize = 10
@@ -564,7 +561,7 @@ function LiquidGlass:CreateWindow(config)
     catTitle.BackgroundTransparency = 1
     catTitle.Size = UDim2.new(1, -16, 0, 20)
     catTitle.Position = UDim2.new(0, 18, 0, 12)
-    catTitle.Font = Theme.FontBold
+    catTitle.FontFace = Theme.FontBold
     catTitle.Text = "NAVIGATION"
     catTitle.TextColor3 = Theme.TextMuted
     catTitle.TextSize = 10
@@ -600,7 +597,7 @@ function LiquidGlass:CreateWindow(config)
     footerLabel.BackgroundTransparency = 1
     footerLabel.Size = UDim2.new(0.6, 0, 1, 0)
     footerLabel.Position = UDim2.new(0, 14, 0, 0)
-    footerLabel.Font = Theme.FontSemiBold
+    footerLabel.FontFace = Theme.FontSemiBold
     footerLabel.Text = self.Title .. "  |  " .. self.Executor
     footerLabel.TextColor3 = Theme.TextSecondary
     footerLabel.TextSize = 10
@@ -612,7 +609,7 @@ function LiquidGlass:CreateWindow(config)
     perfLabel.BackgroundTransparency = 1
     perfLabel.Size = UDim2.new(0.4, -14, 1, 0)
     perfLabel.Position = UDim2.new(0.6, 0, 0, 0)
-    perfLabel.Font = Theme.FontRegular
+    perfLabel.FontFace = Theme.FontRegular
     perfLabel.Text = "FPS: --  |  " .. LocalPlayer.Name
     perfLabel.TextColor3 = Theme.TextMuted
     perfLabel.TextSize = 10
@@ -730,7 +727,7 @@ function Window:AddTab(name, iconId)
     tabBtn.BackgroundColor3 = Theme.Accent
     tabBtn.BackgroundTransparency = 1
     tabBtn.Size = UDim2.new(1, 0, 0, 40)
-    tabBtn.Font = Theme.FontSemiBold
+    tabBtn.FontFace = Theme.FontSemiBold
     tabBtn.Text = ""
     tabBtn.ZIndex = 6
     tabBtn.Parent = self._tabScroller
@@ -754,7 +751,7 @@ function Window:AddTab(name, iconId)
     tabLabel.BackgroundTransparency = 1
     tabLabel.Size = UDim2.new(1, -offset, 1, 0)
     tabLabel.Position = UDim2.new(0, offset, 0, 0)
-    tabLabel.Font = Theme.FontSemiBold
+    tabLabel.FontFace = Theme.FontSemiBold
     tabLabel.Text = name
     tabLabel.TextColor3 = Theme.TextMuted
     tabLabel.TextSize = 13
@@ -919,7 +916,7 @@ function Window:AddTab(name, iconId)
         gTitle.BackgroundTransparency = 1
         gTitle.Size = UDim2.new(1, -60, 1, 0)
         gTitle.Position = UDim2.new(0, offset, 0, 0)
-        gTitle.Font = Theme.FontBold
+        gTitle.FontFace = Theme.FontBold
         gTitle.Text = title:upper()
         gTitle.TextColor3 = Theme.TextPrimary
         gTitle.TextSize = 12
@@ -1001,7 +998,7 @@ function Window:AddTab(name, iconId)
             label.BackgroundTransparency = 1
             label.Size = UDim2.new(1, -24, 1, 0)
             label.Position = UDim2.new(0, 14, 0, 0)
-            label.Font = Theme.FontSemiBold
+            label.FontFace = Theme.FontSemiBold
             label.Text = btnConfig.Text or "Button"
             label.TextColor3 = Theme.TextPrimary
             label.TextSize = 13
@@ -1058,7 +1055,7 @@ function Window:AddTab(name, iconId)
             label.BackgroundTransparency = 1
             label.Size = UDim2.new(1, -70, 1, 0)
             label.Position = UDim2.new(0, 14, 0, 0)
-            label.Font = Theme.FontSemiBold
+            label.FontFace = Theme.FontSemiBold
             label.Text = togConfig.Text or "Toggle"
             label.TextColor3 = Theme.TextPrimary
             label.TextSize = 13
@@ -1146,7 +1143,7 @@ function Window:AddTab(name, iconId)
             label.BackgroundTransparency = 1
             label.Size = UDim2.new(1, -70, 0, 24)
             label.Position = UDim2.new(0, 14, 0, 10)
-            label.Font = Theme.FontSemiBold
+            label.FontFace = Theme.FontSemiBold
             label.Text = slidConfig.Text or "Slider"
             label.TextColor3 = Theme.TextPrimary
             label.TextSize = 13
@@ -1158,7 +1155,7 @@ function Window:AddTab(name, iconId)
             valLabel.BackgroundTransparency = 1
             valLabel.Size = UDim2.new(0, 60, 0, 24)
             valLabel.Position = UDim2.new(1, -72, 0, 10)
-            valLabel.Font = Theme.FontBold
+            valLabel.FontFace = Theme.FontBold
             valLabel.Text = value .. suffix
             valLabel.TextColor3 = Theme.Accent
             valLabel.TextSize = 13
@@ -1196,7 +1193,7 @@ function Window:AddTab(name, iconId)
             tooltip.Size = UDim2.new(0, 44, 0, 22)
             tooltip.BackgroundColor3 = Theme.Accent
             tooltip.TextColor3 = Color3.fromRGB(255, 255, 255)
-            tooltip.Font = Theme.FontBold
+            tooltip.FontFace = Theme.FontBold
             tooltip.TextSize = 11
             tooltip.Text = value .. suffix
             tooltip.BackgroundTransparency = 1
@@ -1259,7 +1256,7 @@ function Window:AddTab(name, iconId)
             label.BackgroundTransparency = 1
             label.Size = UDim2.new(1, -130, 1, 0)
             label.Position = UDim2.new(0, 14, 0, 0)
-            label.Font = Theme.FontSemiBold
+            label.FontFace = Theme.FontSemiBold
             label.Text = dropConfig.Text or "Dropdown"
             label.TextColor3 = Theme.TextPrimary
             label.TextSize = 13
@@ -1272,7 +1269,7 @@ function Window:AddTab(name, iconId)
             trigger.BackgroundTransparency = 0.8
             trigger.Size = UDim2.new(0, 110, 0, 28)
             trigger.Position = UDim2.new(1, -124, 0.5, -14)
-            trigger.Font = Theme.FontSemiBold
+            trigger.FontFace = Theme.FontSemiBold
             trigger.Text = selected .. "  ▾"
             trigger.TextColor3 = Theme.TextPrimary
             trigger.TextSize = 12
@@ -1285,7 +1282,6 @@ function Window:AddTab(name, iconId)
             trigStroke.Transparency = 0.4
             trigStroke.Thickness = 1
 
-            -- Gunakan sistem Floating Dropdown
             local ddObj = CreateFloatingDropdown(mainGui, trigger, options, selected, useSearch, dropConfig.Callback)
 
             container.Parent = gBody
@@ -1310,7 +1306,7 @@ function Window:AddTab(name, iconId)
             label.BackgroundTransparency = 1
             label.Size = UDim2.new(1, -12, 0, 22)
             label.Position = UDim2.new(0, 14, 0, 4)
-            label.Font = Theme.FontSemiBold
+            label.FontFace = Theme.FontSemiBold
             label.Text = inpConfig.Text or "Input"
             label.TextColor3 = Theme.TextSecondary
             label.TextSize = 12
@@ -1322,7 +1318,7 @@ function Window:AddTab(name, iconId)
             box.BackgroundTransparency = 0.2
             box.Size = UDim2.new(1, -28, 0, 22)
             box.Position = UDim2.new(0, 14, 1, -28)
-            box.Font = Theme.FontRegular
+            box.FontFace = Theme.FontRegular
             box.PlaceholderText = inpConfig.Placeholder or "Write here..."
             box.PlaceholderColor3 = Theme.TextMuted
             box.Text = inpConfig.Default or ""
@@ -1369,7 +1365,7 @@ function Window:AddTab(name, iconId)
             label.BackgroundTransparency = 1
             label.Size = UDim2.new(1, -110, 1, 0)
             label.Position = UDim2.new(0, 14, 0, 0)
-            label.Font = Theme.FontSemiBold
+            label.FontFace = Theme.FontSemiBold
             label.Text = kbConfig.Text or "Keybind"
             label.TextColor3 = Theme.TextPrimary
             label.TextSize = 13
@@ -1381,7 +1377,7 @@ function Window:AddTab(name, iconId)
             trigger.BackgroundTransparency = 0.8
             trigger.Size = UDim2.new(0, 90, 0, 28)
             trigger.Position = UDim2.new(1, -104, 0.5, -14)
-            trigger.Font = Theme.FontBold
+            trigger.FontFace = Theme.FontBold
             trigger.Text = (key == Enum.KeyCode.Unknown) and "NONE" or key.Name
             trigger.TextColor3 = Theme.TextPrimary
             trigger.TextSize = 12
@@ -1444,7 +1440,7 @@ function Window:AddTab(name, iconId)
             label.BackgroundTransparency = 1
             label.Size = UDim2.new(1, -70, 1, 0)
             label.Position = UDim2.new(0, 14, 0, 0)
-            label.Font = Theme.FontSemiBold
+            label.FontFace = Theme.FontSemiBold
             label.Text = cpConfig.Text or "Color Picker"
             label.TextColor3 = Theme.TextPrimary
             label.TextSize = 13
@@ -1554,7 +1550,7 @@ function Window:AddTab(name, iconId)
             hexLabel.BackgroundTransparency = 1
             hexLabel.Size = UDim2.new(1, 0, 0, 18)
             hexLabel.Position = UDim2.new(0, 0, 0, 50)
-            hexLabel.Font = Theme.FontBold
+            hexLabel.FontFace = Theme.FontBold
             hexLabel.Text = "HEX: #78B4FF"
             hexLabel.TextColor3 = Theme.TextPrimary
             hexLabel.TextSize = 12
@@ -1566,7 +1562,7 @@ function Window:AddTab(name, iconId)
             rgbLabel.BackgroundTransparency = 1
             rgbLabel.Size = UDim2.new(1, 0, 0, 18)
             rgbLabel.Position = UDim2.new(0, 0, 0, 70)
-            rgbLabel.Font = Theme.FontSemiBold
+            rgbLabel.FontFace = Theme.FontSemiBold
             rgbLabel.Text = "RGB: 120, 180, 255"
             rgbLabel.TextColor3 = Theme.TextSecondary
             rgbLabel.TextSize = 11
@@ -1578,7 +1574,7 @@ function Window:AddTab(name, iconId)
             hsvLabel.BackgroundTransparency = 1
             hsvLabel.Size = UDim2.new(1, 0, 0, 18)
             hsvLabel.Position = UDim2.new(0, 0, 0, 90)
-            hsvLabel.Font = Theme.FontSemiBold
+            hsvLabel.FontFace = Theme.FontSemiBold
             hsvLabel.Text = "HSV: 213°, 52%, 100%"
             hsvLabel.TextColor3 = Theme.TextMuted
             hsvLabel.TextSize = 11
@@ -1752,7 +1748,7 @@ function LiquidGlass.Notify(config)
     local iconLabel = Instance.new("TextLabel")
     iconLabel.BackgroundTransparency = 1
     iconLabel.Size = UDim2.new(1, 0, 1, 0)
-    iconLabel.Font = Theme.FontBold
+    iconLabel.FontFace = Theme.FontBold
     iconLabel.Text = (ntype == "success" and "✓") or (ntype == "warning" and "⚠") or (ntype == "danger" and "✕") or "i"
     iconLabel.TextColor3 = Color3.fromRGB(12, 13, 20)
     iconLabel.TextSize = 16
@@ -1770,7 +1766,7 @@ function LiquidGlass.Notify(config)
     titleLabel.BackgroundTransparency = 1
     titleLabel.Size = UDim2.new(1, 0, 0.5, 0)
     titleLabel.Position = UDim2.new(0, 0, 0.1, 0)
-    titleLabel.Font = Theme.FontBold
+    titleLabel.FontFace = Theme.FontBold
     titleLabel.Text = title
     titleLabel.TextColor3 = Theme.TextPrimary
     titleLabel.TextSize = 14
@@ -1782,7 +1778,7 @@ function LiquidGlass.Notify(config)
     msgLabel.BackgroundTransparency = 1
     msgLabel.Size = UDim2.new(1, 0, 0.5, 0)
     msgLabel.Position = UDim2.new(0, 0, 0.5, 0)
-    msgLabel.Font = Theme.FontRegular
+    msgLabel.FontFace = Theme.FontRegular
     msgLabel.Text = message
     msgLabel.TextColor3 = Theme.TextSecondary
     msgLabel.TextSize = 12
@@ -1794,7 +1790,7 @@ function LiquidGlass.Notify(config)
     timeLabel.BackgroundTransparency = 1
     timeLabel.Size = UDim2.new(0, 50, 0, 16)
     timeLabel.Position = UDim2.new(1, -62, 0, 12)
-    timeLabel.Font = Theme.FontSemiBold
+    timeLabel.FontFace = Theme.FontSemiBold
     timeLabel.Text = "now"
     timeLabel.TextColor3 = Theme.TextMuted
     timeLabel.TextSize = 11
